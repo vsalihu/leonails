@@ -7,6 +7,7 @@ import { bookingIdForToken, customerBookingView } from "@/lib/server/booking-acc
 import { getSettings } from "@/lib/server/settings";
 import { AppointmentActions } from "@/components/booking/appointment-actions";
 import { formatDuration, formatPence } from "@/lib/money";
+import { nowMs } from "@/lib/server/clock";
 
 export const metadata: Metadata = { title: "Your appointment", robots: { index: false, follow: false } };
 
@@ -26,7 +27,7 @@ export default async function AppointmentPage({ params, searchParams }: { params
 
   const start = DateTime.fromJSDate(b.startsAt, { zone: settings.timezone });
   const end = DateTime.fromJSDate(b.endsAt, { zone: settings.timezone });
-  const canChange = b.status === "confirmed" && b.startsAt.getTime() - Date.now() >= settings.customerChangeCutoffMinutes * 60_000;
+  const canChange = b.status === "confirmed" && b.startsAt.getTime() - nowMs() >= settings.customerChangeCutoffMinutes * 60_000;
   const cutoffHours = settings.customerChangeCutoffMinutes / 60;
   const cutoffText = Number.isInteger(cutoffHours) ? `${cutoffHours} hours` : `${settings.customerChangeCutoffMinutes} minutes`;
   const justConfirmed = sp.confirmed === "1" && b.status === "confirmed";

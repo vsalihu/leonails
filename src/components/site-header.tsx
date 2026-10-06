@@ -14,18 +14,20 @@ const NAV = [
 
 export function SiteHeader({ businessName }: { businessName: string }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  // The menu is open for the path it was opened on, so navigating closes it.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
+  const setOpen = (v: boolean | ((o: boolean) => boolean)) => setOpenOn((typeof v === "function" ? v(open) : v) ? pathname : null);
   const menuRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const [first, ...rest] = businessName.split(" ");
 
-  useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setOpen(false);
+        setOpenOn(null);
         toggleRef.current?.focus();
       }
     };

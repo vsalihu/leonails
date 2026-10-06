@@ -112,33 +112,28 @@ export function BookingFlow(props: {
     headingRef.current?.focus();
   }, [step]);
 
-  // Countdown tick while a hold is live.
+  // Countdown tick while a hold is live; releases the checkout when it runs out.
+  const onExpireRef = useRef<() => void>(() => {});
   useEffect(() => {
     if (!hold) return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
+    const expiresAt = new Date(hold.expiresAt).getTime();
+    const t = setInterval(() => {
+      const n = Date.now();
+      setNow(n);
+      if (n >= expiresAt) {
+        clearInterval(t);
+        onExpireRef.current();
+      }
+    }, 1000);
     return () => clearInterval(t);
   }, [hold]);
   const remaining = hold ? Math.max(0, new Date(hold.expiresAt).getTime() - now) : 0;
-  const expired = !!hold && remaining === 0;
-
-  useEffect(() => {
-    if (expired && step !== "time" && step !== "treatment") {
-      setError(`Your reserved time has been released because the ${props.holdMinutes} minutes ran out. Please choose a time again; your details are kept.`);
-      setHold(null);
-      setCodeSent(false);
-      setCode("");
-      setStep("time");
-      void loadDays();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expired]);
 
   const loadDays = useCallback(async () => {
     if (!treatmentId) return;
-    setDays(null);
-    setDaysError(null);
     const r = await api<{ bookingsEnabled: boolean; days: Day[] }>(`/api/booking/availability?treatment=${treatmentId}&extras=${extraIds.join(",")}`);
     if (!r.ok) return setDaysError(r.error);
+    setDaysError(null);
     if (!r.data.bookingsEnabled) return setDaysError("Online booking is paused at the moment. Please get in touch to arrange an appointment.");
     setDays(r.data.days);
     const firstOpen = r.data.days.find((d) => d.slots > 0);
@@ -163,13 +158,37 @@ export function BookingFlow(props: {
   );
 
   useEffect(() => {
-    if (step === "time") void loadDays();
+    onExpireRef.current = () => {
+      if (step === "time" || step === "treatment") {
+        setHold(null);
+        return;
+      }
+      setError(`Your reserved time has been released because the ${props.holdMinutes} minutes ran out. Please choose a time again; your details are kept.`);
+      setHold(null);
+      setCodeSent(false);
+      setCode("");
+      setStep("time");
+      setDays(null);
+      void loadDays();
+    };
+  });
+
+  // Initial load when arriving with a preselected treatment.
+  useEffect(() => {
+    // Data fetch on mount: state is only set after the request resolves.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (initial) void loadDays();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, []);
 
   function go(next: Step) {
     setError(null);
     setStep(next);
+    if (next === "time") {
+      setDays(null);
+      setDaysError(null);
+      void loadDays();
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -455,7 +474,7 @@ export function BookingFlow(props: {
               {daysError ? (
                 <div className="mt-8 border border-line bg-paper p-6">
                   <p>{daysError}</p>
-                  <button type="button" className="btn btn-outline mt-4" onClick={() => void loadDays()}>Try again</button>
+                  <button type="button" className="btn btn-outline mt-4" onClick={() => { setDaysError(null); setDays(null); void loadDays(); }}>Try again</button>
                 </div>
               ) : !days ? (
                 <CalendarSkeleton />

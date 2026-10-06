@@ -69,6 +69,7 @@ async function mintBookingLink(db: Db, bookingId: number, startsAt: Date, purpos
   return `${env().APP_URL}/${purpose === "manage" ? "appointment" : "review"}/${token}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped database row
 function summary(settings: Settings, b: Record<string, any>, items: Record<string, any>[]) {
   const lines = [
     `> When: ${when(settings, b.starts_at)}`,

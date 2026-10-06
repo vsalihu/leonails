@@ -3,6 +3,7 @@ import { sql, type Db } from "./db";
 import { quote, type PriceLine, type PromotionRule, type Quote } from "../pricing";
 import { isFirstVisit } from "./customers";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped database row
 function mapPromotion(r: Record<string, any>, treatmentIds: number[]): PromotionRule {
   return {
     id: r.id, name: r.name, code: r.code, application: r.application, discountType: r.discount_type,

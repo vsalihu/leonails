@@ -73,6 +73,7 @@ async function insertBooking(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped database row
 async function queueConfirmation(tx: Tx, settings: Settings, booking: Record<string, any>) {
   await enqueue(tx, {
     kind: "booking_confirmation",

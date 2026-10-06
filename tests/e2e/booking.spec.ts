@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { latestCodeFor, db } from "./db";
 
-test.afterAll(async () => {
-  await db.end();
-});
 
 test("a guest books, verifies their email, sees the private address and can cancel", async ({ page }, info) => {
   const email = `e2e-${info.project.name}-${Date.now()}@example.test`;

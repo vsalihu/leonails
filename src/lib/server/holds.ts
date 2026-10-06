@@ -50,6 +50,7 @@ export type HoldView = {
   verified: boolean;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped database row
 function view(r: Record<string, any>): HoldView {
   return {
     publicId: r.public_id,

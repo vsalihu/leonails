@@ -37,3 +37,11 @@ export async function clientIp(): Promise<string> {
 export async function clientIpHash(): Promise<string> {
   return hmacHex(`ip:${await clientIp()}`).slice(0, 32);
 }
+
+/** Current count in the window without incrementing (for failure-only limits). */
+export async function rateCount(bucket: string, windowSeconds: number): Promise<number> {
+  const [row] = await sql()<{ count: number }[]>`
+    SELECT count FROM rate_limits
+    WHERE bucket = ${bucket} AND window_start = to_timestamp(floor(extract(epoch FROM now()) / ${windowSeconds}) * ${windowSeconds})`;
+  return row?.count ?? 0;
+}
