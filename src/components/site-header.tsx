@@ -40,46 +40,47 @@ export function SiteHeader({ businessName }: { businessName: string }) {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-[var(--z-nav)] border-b border-line/70 bg-ivory/92 backdrop-blur-sm supports-[backdrop-filter]:bg-ivory/85">
+    <header className="sticky top-0 z-[var(--z-nav)] border-b border-ink/10 bg-ivory/90 backdrop-blur-md supports-[backdrop-filter]:bg-ivory/80">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:bg-ink focus:px-4 focus:py-2 focus:text-ivory">
         Skip to content
       </a>
-      <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-6 px-4 md:h-[4.5rem] md:px-8">
-        <Link href="/" className="flex items-baseline gap-2 leading-none" aria-label={`${businessName}, home`}>
-          <span className="display text-[1.65rem] md:text-[1.85rem]">{first}</span>
-          {rest.length > 0 && <span className="eyebrow hidden text-[0.62rem] text-taupe xs:inline">{rest.join(" ")}</span>}
-        </Link>
-
+      {/* Fashion-house layout: split navigation, centred spaced wordmark. */}
+      <div className="mx-auto grid h-16 max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 md:h-[4.75rem] md:px-8">
         <nav aria-label="Main" className="hidden lg:block">
-          <ul className="flex items-center gap-8 text-[0.9rem]">
-            {NAV.map((n) => {
-              const active = pathname === n.href || pathname.startsWith(`${n.href}/`);
-              return (
-                <li key={n.href}>
-                  <Link href={n.href} aria-current={active ? "page" : undefined} className={`py-2 transition-colors hover:text-champagne-text ${active ? "link-underline" : ""}`}>
-                    {n.label}
-                  </Link>
-                </li>
-              );
-            })}
+          <ul className="flex items-center gap-9">
+            {NAV.slice(0, 3).map((n) => (
+              <li key={n.href}><NavLink href={n.href} label={n.label} pathname={pathname} /></li>
+            ))}
           </ul>
         </nav>
+        <button
+          ref={toggleRef}
+          type="button"
+          className="-ml-2 inline-flex h-11 w-11 items-center justify-center justify-self-start lg:hidden"
+          aria-expanded={open}
+          aria-controls="mobile-menu"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <X size={22} weight="light" aria-hidden /> : <List size={22} weight="light" aria-hidden />}
+          <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
+        </button>
 
-        <div className="flex items-center gap-2">
-          <Link href="/book" className="btn btn-primary hidden h-11 min-h-0 px-5 sm:inline-flex">
+        <Link href="/" className="group flex flex-col items-center leading-none" aria-label={`${businessName}, home`}>
+          <span className="wordmark text-[1.35rem] md:text-[1.7rem]">{first}</span>
+          {rest.length > 0 && <span className="mt-1.5 text-[0.55rem] font-medium uppercase tracking-[0.42em] text-taupe md:text-[0.6rem]">{rest.join(" ")}</span>}
+        </Link>
+
+        <div className="flex items-center justify-end gap-9">
+          <nav aria-label="Secondary" className="hidden lg:block">
+            <ul className="flex items-center gap-9">
+              {NAV.slice(3).map((n) => (
+                <li key={n.href}><NavLink href={n.href} label={n.label} pathname={pathname} /></li>
+              ))}
+            </ul>
+          </nav>
+          <Link href="/book" className="btn btn-primary btn-sm hidden sm:inline-flex">
             Book an appointment
           </Link>
-          <button
-            ref={toggleRef}
-            type="button"
-            className="-mr-2 inline-flex h-11 w-11 items-center justify-center lg:hidden"
-            aria-expanded={open}
-            aria-controls="mobile-menu"
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <X size={24} weight="light" aria-hidden /> : <List size={24} weight="light" aria-hidden />}
-            <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
-          </button>
         </div>
       </div>
 
@@ -93,7 +94,7 @@ export function SiteHeader({ businessName }: { businessName: string }) {
             <ul className="divide-y divide-line">
               {NAV.map((n) => (
                 <li key={n.href}>
-                  <Link href={n.href} className="display flex min-h-16 items-center text-3xl" aria-current={pathname === n.href ? "page" : undefined}>
+                  <Link href={n.href} className="display flex min-h-[4.5rem] items-center text-[2.4rem]" aria-current={pathname === n.href ? "page" : undefined}>
                     {n.label}
                   </Link>
                 </li>
@@ -107,5 +108,14 @@ export function SiteHeader({ businessName }: { businessName: string }) {
         </div>
       )}
     </header>
+  );
+}
+
+function NavLink({ href, label, pathname }: { href: string; label: string; pathname: string }) {
+  const active = pathname === href || pathname.startsWith(`${href}/`);
+  return (
+    <Link href={href} aria-current={active ? "page" : undefined} className={`nav-link ${active ? "is-active" : ""}`}>
+      {label}
+    </Link>
   );
 }

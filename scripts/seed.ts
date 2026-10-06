@@ -9,7 +9,13 @@
  */
 import "dotenv/config";
 import postgres from "postgres";
-import { swatchSvg, studioSvg, svgToJpeg, type SwatchStyle } from "./lib/placeholder-art";
+import { leopardSvg } from "./lib/placeholder-art";
+import { markPlaceholder, rasterTile, renderStillLife, type StillLife, type Swatch } from "./lib/still-life";
+
+function luminance(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+}
 import { processImage, insertMedia } from "../src/lib/server/images";
 
 const url = process.env.DATABASE_URL;
@@ -133,38 +139,64 @@ async function main() {
   });
 
   await unit("media-placeholders", async (tx) => {
-    const styles: { cat: string; alt: string; caption: string | null; style: SwatchStyle; feature?: boolean }[] = [
-      { cat: "french", alt: "Placeholder artwork: almond nails with a fine white French tip", caption: "French finish", style: { backdrop: ["#EDE4D8", "#D9C6B2"], polishes: ["#E9C9BA", "#DDB7A5"], tip: "#FBF7F2" }, feature: true },
-      { cat: "nude", alt: "Placeholder artwork: sheer nude almond nails", caption: "Sheer nude", style: { backdrop: ["#F3ECE3", "#E3D3C2"], polishes: ["#E2C2B0", "#D8B4A0", "#E9CDBD"] }, feature: true },
-      { cat: "nail-art", alt: "Placeholder artwork: nude nails with a fine champagne line", caption: "Fine line detail", style: { backdrop: ["#2B211D", "#191512"], polishes: ["#C7A997", "#B89580", "#D9BBA8"], accent: "#A88958" }, feature: true },
-      { cat: "occasion", alt: "Placeholder artwork: deep espresso glossy nails", caption: "Espresso gloss", style: { backdrop: ["#E8DDD0", "#CDB8A3"], polishes: ["#3A2A22", "#4A3329"] } },
-      { cat: "nude", alt: "Placeholder artwork: soft pink-nude builder gel nails", caption: null, style: { backdrop: ["#EFE5DC", "#DCC6B6"], polishes: ["#E7C0B4", "#EBCDC3"] } },
-      { cat: "french", alt: "Placeholder artwork: nude nails with a champagne French tip", caption: "Champagne tip", style: { backdrop: ["#F2EBE1", "#E0CFBD"], polishes: ["#E4C6B4"], tip: "#C9AE84" } },
-      { cat: "nail-art", alt: "Placeholder artwork: nude nails with fine dark line art", caption: null, style: { backdrop: ["#EDE4D8", "#D6C2AE"], polishes: ["#E6CBBB", "#DABAA6"], accent: "#2B211D" } },
-      { cat: "occasion", alt: "Placeholder artwork: muted rose nails", caption: "Muted rose", style: { backdrop: ["#2B211D", "#1F1815"], polishes: ["#B98A80", "#A97A70"] } },
+    // Rendered still lifes: glossy almond nails on draped satin (some leopard-printed).
+    const leopardLight = await rasterTile(leopardSvg({ ground: "#d9c2a8", ink: "#2e211b", centre: "#b08d72", seed: 31, size: 640 }), 640, 1.4);
+    const leopardDark = await rasterTile(leopardSvg({ ground: "#3a2a22", ink: "#120c09", centre: "#5e4535", seed: 47, size: 640 }), 640, 1.4);
+    type Nail = Omit<Swatch, "cx" | "cy" | "rx" | "ry" | "angle">;
+    const cascade = (n: Nail, k = 3): Swatch[] =>
+      [
+        { cx: 0.36, cy: 0.42, angle: -0.5 },
+        { cx: 0.52, cy: 0.5, angle: -0.15 },
+        { cx: 0.66, cy: 0.62, angle: 0.3 },
+        { cx: 0.44, cy: 0.7, angle: 0.75 },
+      ].slice(0, k).map((p) => ({ ...p, rx: 0.06, ry: 0.15, ...n }));
+    const single = (n: Nail): Swatch[] => [{ cx: 0.55, cy: 0.52, rx: 0.075, ry: 0.19, angle: -0.35, ...n }];
+    const render = async (w: number, h: number, seed: number, scene: Omit<StillLife, "width" | "height" | "seed">) =>
+      markPlaceholder(await renderStillLife({ width: w, height: h, seed, ...scene }), w, h, luminance(scene.fabric) < 0.35);
+
+    const gallery: { cat: string; alt: string; caption: string | null; feature?: boolean; tall: boolean; scene: Omit<StillLife, "width" | "height" | "seed"> }[] = [
+      { cat: "french", alt: "Placeholder artwork: almond nails with a fine white French tip on leopard silk", caption: "French finish", feature: true, tall: true,
+        scene: { fabric: "#d6bfa6", sheen: "#fff1e2", foldFrequency: 0.7, print: { ...leopardLight, scale: 1.35, strength: 0.85 }, swatches: cascade({ color: "#e3c1b2", tip: "#f7f1eb" }) } },
+      { cat: "nude", alt: "Placeholder artwork: sheer nude almond nails on ivory satin", caption: "Sheer nude", feature: true, tall: false,
+        scene: { fabric: "#ece2d6", sheen: "#ffffff", foldFrequency: 0.8, swatches: cascade({ color: "#e2c0ae" }, 4) } },
+      { cat: "nail-art", alt: "Placeholder artwork: nude nails with a fine gold line on espresso satin", caption: "Fine line detail", feature: true, tall: true,
+        scene: { fabric: "#22170f", sheen: "#f0d2b8", foldFrequency: 0.8, swatches: cascade({ color: "#d8b8a3", accent: "#b8955c" }) } },
+      { cat: "occasion", alt: "Placeholder artwork: gold chrome almond nails on ivory satin", caption: "Gold chrome", tall: true,
+        scene: { fabric: "#efe6da", sheen: "#ffffff", foldFrequency: 0.75, swatches: cascade({ color: "#b39066", metallic: true }) } },
+      { cat: "nude", alt: "Placeholder artwork: a single soft pink-nude nail on blush satin", caption: null, tall: false,
+        scene: { fabric: "#e3c9bc", sheen: "#fff4ee", foldFrequency: 0.6, swatches: single({ color: "#e7c0b4" }) } },
+      { cat: "french", alt: "Placeholder artwork: nude nails with a champagne French tip on dark leopard silk", caption: "Champagne tip", tall: true,
+        scene: { fabric: "#3a2a22", sheen: "#e9cbb2", foldFrequency: 0.7, print: { ...leopardDark, scale: 1.3, strength: 0.8 }, swatches: cascade({ color: "#e4c6b4", tip: "#c9ae84" }) } },
+      { cat: "occasion", alt: "Placeholder artwork: deep espresso glossy nails on cream satin", caption: "Espresso gloss", tall: false,
+        scene: { fabric: "#e9dccb", sheen: "#ffffff", foldFrequency: 0.7, swatches: cascade({ color: "#3a2620" }) } },
+      { cat: "nail-art", alt: "Placeholder artwork: muted rose nails with a fine dark line on leopard silk", caption: "Muted rose", tall: true,
+        scene: { fabric: "#d6bfa6", sheen: "#fff1e2", foldFrequency: 0.65, print: { ...leopardLight, scale: 1.6, strength: 0.8 }, swatches: cascade({ color: "#b98a80", accent: "#2b211d" }) } },
     ];
     let order = 0;
-    for (const [i, s] of styles.entries()) {
-      const tall = i % 3 !== 1;
-      const jpeg = await svgToJpeg(swatchSvg(1600, tall ? 2000 : 1600, s.style, 100 + i));
-      const img = await processImage(jpeg, "gallery");
+    for (const [i, g] of gallery.entries()) {
+      const [w, h] = g.tall ? [1280, 1600] : [1400, 1400];
+      const img = await processImage(await render(w, h, 100 + i, g.scene), "gallery");
       const id = await insertMedia(tx as never, img, {
-        usage: "gallery", altText: s.alt, caption: s.caption, category: s.cat, isPublished: true,
+        usage: "gallery", altText: g.alt, caption: g.caption, category: g.cat, isPublished: true,
         provenance: PLACEHOLDER_PROVENANCE, isExample: true, sortOrder: order++,
       });
-      if (s.feature) await tx`UPDATE media_assets SET is_featured = true WHERE id = ${id}`;
+      if (g.feature) await tx`UPDATE media_assets SET is_featured = true WHERE id = ${id}`;
     }
-    // Site imagery slots
-    const site: { slot: string; alt: string; svg: string }[] = [
-      { slot: "home.hero", alt: "Placeholder artwork: a fan of nude almond nails with French tips", svg: swatchSvg(1800, 2250, { backdrop: ["#EAE0D3", "#CDB7A2"], polishes: ["#E6C4B3", "#DDB5A2", "#EACFC1"], tip: "#FBF7F2" }, 42) },
-      { slot: "home.intro", alt: "Placeholder artwork: the studio, a soft arch of light over a small table", svg: studioSvg(1800, 1300, 7) },
-      { slot: "about.portrait", alt: "Placeholder artwork: studio interior", svg: studioSvg(1400, 1750, 12) },
-      { slot: "visit.studio", alt: "Placeholder artwork: studio interior with a nail table", svg: studioSvg(1800, 1200, 21) },
+
+    const site: { slot: string; alt: string; w: number; h: number; scene: Omit<StillLife, "width" | "height" | "seed"> }[] = [
+      { slot: "home.hero", alt: "Placeholder artwork: glossy almond nails with French tips resting on leopard silk", w: 1600, h: 2000,
+        scene: { fabric: "#d6bfa6", sheen: "#fff1e2", foldFrequency: 0.6, print: { ...leopardLight, scale: 1.7, strength: 0.82 }, swatches: cascade({ color: "#e3c1b2", tip: "#f7f1eb" }, 4) } },
+      { slot: "home.intro", alt: "Placeholder artwork: a single nude nail on draped ivory satin", w: 1800, h: 1350,
+        scene: { fabric: "#ece2d6", sheen: "#ffffff", foldFrequency: 0.55, swatches: [{ cx: 0.6, cy: 0.5, rx: 0.07, ry: 0.18, angle: -0.9, color: "#e2c0ae" }] } },
+      { slot: "about.portrait", alt: "Placeholder artwork: gold chrome nails on cream satin", w: 1400, h: 1750,
+        scene: { fabric: "#e9dccb", sheen: "#ffffff", foldFrequency: 0.6, swatches: cascade({ color: "#b39066", metallic: true }) } },
+      { slot: "visit.studio", alt: "Placeholder artwork: espresso satin with nude nails", w: 1800, h: 1200,
+        scene: { fabric: "#22170f", sheen: "#f0d2b8", foldFrequency: 0.6, swatches: cascade({ color: "#d8b8a3" }) } },
     ];
-    for (const s of site) {
-      const img = await processImage(await svgToJpeg(s.svg), "site");
-      const id = await insertMedia(tx as never, img, { usage: "site", altText: s.alt, isPublished: true, provenance: PLACEHOLDER_PROVENANCE, isExample: true });
-      await tx`INSERT INTO site_images (slot, media_id) VALUES (${s.slot}, ${id}) ON CONFLICT (slot) DO NOTHING`;
+    for (const [i, st] of site.entries()) {
+      const img = await processImage(await render(st.w, st.h, 200 + i, st.scene), "site");
+      const id = await insertMedia(tx as never, img, { usage: "site", altText: st.alt, isPublished: true, provenance: PLACEHOLDER_PROVENANCE, isExample: true });
+      await tx`INSERT INTO site_images (slot, media_id) VALUES (${st.slot}, ${id}) ON CONFLICT (slot) DO NOTHING`;
     }
   });
 

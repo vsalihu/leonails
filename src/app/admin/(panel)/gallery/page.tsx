@@ -11,6 +11,7 @@ import { deleteMediaAction, moveMediaAction, saveMediaAction } from "./actions";
 export const metadata: Metadata = { title: "Gallery" };
 
 const SLOT_LABELS: Record<string, string> = { "home.hero": "Homepage hero", "home.intro": "Homepage introduction", "about.portrait": "About page portrait", "visit.studio": "Studio photo" };
+const VIDEO_SLOT_LABELS: Record<string, string> = { "home.hero.video": "Homepage hero video" };
 
 export default async function GalleryAdmin({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   const { show } = await searchParams;
@@ -33,7 +34,8 @@ export default async function GalleryAdmin({ searchParams }: { searchParams: Pro
       {media.length === 0 ? <div className="mt-8"><Empty>No images yet. Upload some above.</Empty></div> : (
         <ul className="mt-8 grid gap-6 lg:grid-cols-2">
           {media.map((m) => {
-            const usedIn = slots.filter((s) => s.media_id === m.id).map((s) => SLOT_LABELS[s.slot]);
+            const usedIn = slots.filter((s) => s.media_id === m.id).map((s) => SLOT_LABELS[s.slot] ?? VIDEO_SLOT_LABELS[s.slot]);
+            const isVideo = m.kind === "video";
             return (
               <li key={m.id} className="border border-line bg-paper p-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
@@ -44,9 +46,16 @@ export default async function GalleryAdmin({ searchParams }: { searchParams: Pro
                 </div>
                 <ActionForm action={saveMediaAction} className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
                   <input type="hidden" name="id" value={m.id} />
-                  <FocalPicker src={mediaUrl({ key: m.storage_key }, bestVariant({ variants: m.variants }, 480))} x={m.focal_x} y={m.focal_y} alt={m.alt_text || "Uploaded image"} />
+                  {isVideo ? (
+                    <div>
+                      <video src={`/media/${m.storage_key}/video.${m.mime === "video/webm" ? "webm" : "mp4"}`} controls muted playsInline preload="metadata" className="w-full bg-night" />
+                      <p className="mt-1 text-xs text-taupe">{m.mime}, {(m.byte_size / 1024 / 1024).toFixed(1)} MB. Plays muted on a loop; visitors who prefer reduced motion see the homepage hero image instead.</p>
+                    </div>
+                  ) : (
+                    <FocalPicker src={mediaUrl({ key: m.storage_key }, bestVariant({ variants: m.variants }, 480))} x={m.focal_x} y={m.focal_y} alt={m.alt_text || "Uploaded image"} />
+                  )}
                   <div className="grid content-start gap-3">
-                    <AField name="alt" label="Description (alt text)" help="What's in the photo, for screen readers."><input name="alt" defaultValue={m.alt_text} className="input" /></AField>
+                    <AField name="alt" label="Description (alt text)" help={isVideo ? "What the video shows, for screen readers." : "What's in the photo, for screen readers."}><input name="alt" defaultValue={m.alt_text} className="input" /></AField>
                     <AField name="caption" label="Caption (optional)"><input name="caption" defaultValue={m.caption ?? ""} className="input" /></AField>
                     {usage === "gallery" && (
                       <>
@@ -59,7 +68,11 @@ export default async function GalleryAdmin({ searchParams }: { searchParams: Pro
                       </>
                     )}
                     <AField name="slot" label="Use on website as (optional)">
-                      <select name="slot" defaultValue="" className="input"><option value="">No change</option>{Object.entries(SLOT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+                      <select name="slot" defaultValue="" className="input">
+                        <option value="">No change</option>
+                        {Object.entries(isVideo ? VIDEO_SLOT_LABELS : SLOT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        {isVideo && usedIn.length > 0 && <option value="none:home.hero.video">Stop using as homepage hero video</option>}
+                      </select>
                     </AField>
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="published" defaultChecked={m.is_published} className="accent-[var(--color-ink)]" /> Published</label>
                     {usage === "gallery" && <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="featured" defaultChecked={m.is_featured} className="accent-[var(--color-ink)]" /> Feature on the homepage</label>}

@@ -1,11 +1,7 @@
 /**
- * Generates the site's placeholder artwork locally (no third-party images):
- * - a seamless, muted leopard texture used as a decorative accent;
- * - abstract "polish swatch" compositions that stand in for photography.
- * Every placeholder photo carries a visible "Placeholder" mark so it is never
- * mistaken for Rugile's work. Replace them from Admin > Gallery.
+ * Seamless, muted leopard texture (SVG) used for decorative accents and as the
+ * printed silk in placeholder still lifes (see still-life.ts).
  */
-import sharp from "sharp";
 
 function prng(seed: number) {
   let s = seed >>> 0;
@@ -106,95 +102,4 @@ export function leopardSvg(opts: { size?: number; ground: string; ink: string; c
 <rect width="100%" height="100%" fill="${opts.ground}"/>
 <g>${shapes.join("")}</g>
 </svg>`;
-}
-
-function luminance(hex: string) {
-  const n = parseInt(hex.slice(1), 16);
-  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
-}
-
-export type SwatchStyle = {
-  backdrop: [string, string];
-  polishes: string[];
-  tip?: string; // french tip colour
-  accent?: string; // fine detail line (nail art)
-  leopardAccent?: boolean;
-};
-
-/**
- * Abstract placeholder: a fan of almond-shaped nails over a soft backdrop,
- * with a visible "Placeholder" mark.
- */
-export function swatchSvg(w: number, h: number, style: SwatchStyle, seed: number, label = "Placeholder image") {
-  const rand = prng(seed);
-  const cx = w * (0.45 + rand() * 0.15);
-  const count = 5;
-  const nailW = Math.min(w, h) * 0.13;
-  const nailH = nailW * 2.3;
-  // centre the fan vertically: nails span [cy - R - nailH, cy - R]
-  const R0 = Math.min(w, h) * 0.32;
-  const cy = h * 0.5 + R0 + nailH / 2 - nailH * 0.15 + (rand() - 0.5) * h * 0.04;
-  const spread = 70 + rand() * 25;
-  const nails: string[] = [];
-  for (let i = 0; i < count; i++) {
-    const a = -spread / 2 + (spread / (count - 1)) * i + (rand() - 0.5) * 6;
-    const radius = Math.min(w, h) * (0.3 + (i === 2 ? 0.04 : 0) + rand() * 0.02);
-    const colour = style.polishes[i % style.polishes.length];
-    const id = `n${i}`;
-    const path = `M0 ${nailH} C ${-nailW * 0.62} ${nailH * 0.7}, ${-nailW * 0.55} ${nailH * 0.12}, 0 0 C ${nailW * 0.55} ${nailH * 0.12}, ${nailW * 0.62} ${nailH * 0.7}, 0 ${nailH} Z`;
-    nails.push(`<g transform="translate(${cx} ${cy}) rotate(${a.toFixed(1)}) translate(0 ${(-radius - nailH).toFixed(1)})">
-  <clipPath id="${id}"><path d="${path}"/></clipPath>
-  <path d="${path}" fill="${colour}"/>
-  ${style.tip ? `<rect x="${-nailW}" y="-2" width="${nailW * 2}" height="${(nailH * 0.24).toFixed(1)}" fill="${style.tip}" clip-path="url(#${id})"/>` : ""}
-  ${style.accent ? `<path d="M${(-nailW * 0.6).toFixed(1)} ${(nailH * 0.3).toFixed(1)} Q 0 ${(nailH * 0.16).toFixed(1)} ${(nailW * 0.6).toFixed(1)} ${(nailH * 0.3).toFixed(1)}" stroke="${style.accent}" stroke-width="${(nailW * 0.05).toFixed(1)}" fill="none" stroke-linecap="round" clip-path="url(#${id})"/>` : ""}
-  <path d="M${(-nailW * 0.18).toFixed(1)} ${(nailH * 0.18).toFixed(1)} C ${(-nailW * 0.3).toFixed(1)} ${(nailH * 0.4).toFixed(1)}, ${(-nailW * 0.28).toFixed(1)} ${(nailH * 0.62).toFixed(1)}, ${(-nailW * 0.16).toFixed(1)} ${(nailH * 0.8).toFixed(1)}" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="${(nailW * 0.09).toFixed(1)}" fill="none" stroke-linecap="round"/>
-</g>`);
-  }
-  const fontSize = Math.max(14, Math.round(Math.min(w, h) * 0.026));
-  const dark = luminance(style.backdrop[0]) < 0.35;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-<defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${style.backdrop[0]}"/><stop offset="1" stop-color="${style.backdrop[1]}"/></linearGradient>
-  <radialGradient id="glow" cx="0.5" cy="0.45" r="0.6"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
-  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${(Math.min(w, h) * 0.02).toFixed(1)}"/></filter>
-  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="${seed}"/><feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.45  0 0 0 0 0.4  0 0 0 0.09 0"/></filter>
-</defs>
-<rect width="100%" height="100%" fill="url(#bg)"/>
-<rect width="100%" height="100%" fill="url(#glow)"/>
-${nails.join("\n")}
-<rect width="100%" height="100%" filter="url(#grain)"/>
-<text x="${Math.round(w * 0.04)}" y="${Math.round(h - h * 0.085)}" font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" letter-spacing="2" fill="${dark ? "#F7F3EC" : "#2B211D"}" fill-opacity="0.6">${label.toUpperCase()}</text>
-</svg>`;
-}
-
-/** Abstract studio interior placeholder: arches and soft light. */
-export function studioSvg(w: number, h: number, seed: number, label = "Placeholder image") {
-  const rand = prng(seed);
-  const archW = w * (0.34 + rand() * 0.08);
-  const archX = w * (0.52 + rand() * 0.1);
-  const fontSize = Math.max(14, Math.round(Math.min(w, h) * 0.026));
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-<defs>
-  <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EFE6DA"/><stop offset="1" stop-color="#DCCBB8"/></linearGradient>
-  <linearGradient id="light" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF8EE"/><stop offset="1" stop-color="#E8D8C4"/></linearGradient>
-  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="${seed}"/><feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.45  0 0 0 0 0.4  0 0 0 0.08 0"/></filter>
-</defs>
-<rect width="100%" height="100%" fill="url(#wall)"/>
-<path d="M${archX - archW / 2} ${h * 0.82} V ${h * 0.34} A ${archW / 2} ${archW / 2} 0 0 1 ${archX + archW / 2} ${h * 0.34} V ${h * 0.82} Z" fill="url(#light)"/>
-<rect x="0" y="${h * 0.82}" width="${w}" height="${h * 0.18}" fill="#C9B29C"/>
-<rect x="${w * 0.08}" y="${h * 0.66}" width="${w * 0.38}" height="${h * 0.035}" fill="#2B211D" opacity="0.85"/>
-<rect x="${w * 0.12}" y="${h * 0.695}" width="${w * 0.018}" height="${h * 0.125}" fill="#2B211D" opacity="0.85"/>
-<rect x="${w * 0.4}" y="${h * 0.695}" width="${w * 0.018}" height="${h * 0.125}" fill="#2B211D" opacity="0.85"/>
-<ellipse cx="${w * 0.2}" cy="${h * 0.645}" rx="${w * 0.03}" ry="${h * 0.018}" fill="#A88958"/>
-<rect width="100%" height="100%" filter="url(#grain)"/>
-<text x="${Math.round(w * 0.04)}" y="${Math.round(h - h * 0.085)}" font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" letter-spacing="2" fill="#2B211D" fill-opacity="0.55">${label.toUpperCase()}</text>
-</svg>`;
-}
-
-export async function svgToJpeg(svg: string): Promise<Buffer> {
-  return sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toBuffer();
-}
-
-export async function svgToWebp(svg: string): Promise<Buffer> {
-  return sharp(Buffer.from(svg)).webp({ quality: 85 }).toBuffer();
 }

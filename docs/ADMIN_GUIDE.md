@@ -77,6 +77,8 @@ Only one offer applies per booking: the client gets whichever saves them most. T
 
 **Website images** (top of the gallery page) are the fixed pictures on the homepage and About page. Use *Use on website as* to place them.
 
+**Homepage video.** Under Website images you can upload a short MP4 or WebM video (up to 40 MB; about 8 to 10 seconds at 1080p, exported for web, works best). Add a description, choose *Use on website as: Homepage hero video* and tick Published. It plays silently on a loop beside the headline, with a pause button. The homepage hero *image* is used as its first frame and for visitors who have turned off motion on their device, so keep a good hero image set too. To go back to the still image, choose *Stop using as homepage hero video*.
+
 ## Reviews
 
 Reviews clients send through their invitation link wait here until you **approve** them (with or without their photo). You can **feature**, **hide**, **reject** or **delete** any review. **Invite recent clients** lists completed appointments you haven't asked yet. **Add a review you received elsewhere** (e.g. a message) with a note of how they agreed to it being published.

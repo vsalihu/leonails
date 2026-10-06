@@ -26,12 +26,21 @@ export const publicSettings = cache(async () => {
 export async function siteImages(slots: string[]): Promise<Record<string, Media | null>> {
   const db = sql();
   const rows = await db.unsafe(
-    `SELECT si.slot, ${MEDIA_COLS} FROM site_images si JOIN media_assets m ON m.id = si.media_id WHERE si.slot = ANY($1) AND m.is_published`,
+    `SELECT si.slot, ${MEDIA_COLS} FROM site_images si JOIN media_assets m ON m.id = si.media_id WHERE si.slot = ANY($1) AND m.is_published AND m.kind = 'image'`,
     [slots],
   );
   const out: Record<string, Media | null> = Object.fromEntries(slots.map((s) => [s, null]));
   for (const r of rows) out[r.slot] = mapMedia(r);
   return out;
+}
+
+/** Optional looping hero video (slot "home.hero.video"). */
+export async function heroVideoSource(): Promise<{ src: string; type: string } | null> {
+  const [r] = await sql()`
+    SELECT m.storage_key, m.mime FROM site_images si JOIN media_assets m ON m.id = si.media_id
+    WHERE si.slot = 'home.hero.video' AND m.is_published AND m.kind = 'video'`;
+  if (!r) return null;
+  return { src: `/media/${r.storage_key}/video.${r.mime === "video/webm" ? "webm" : "mp4"}`, type: r.mime };
 }
 
 export type GalleryItem = Media & { category: string | null; isFeatured: boolean; treatment: { slug: string; name: string } | null };
@@ -41,7 +50,7 @@ export async function galleryItems(opts: { featuredOnly?: boolean; limit?: numbe
   const rows = await db.unsafe(
     `SELECT ${MEDIA_COLS}, m.category, m.is_featured, t.slug AS t_slug, t.name AS t_name
      FROM media_assets m LEFT JOIN treatments t ON t.id = m.related_treatment_id AND t.status = 'active'
-     WHERE m.usage = 'gallery' AND m.is_published ${opts.featuredOnly ? "AND m.is_featured" : ""}
+     WHERE m.usage = 'gallery' AND m.kind = 'image' AND m.is_published ${opts.featuredOnly ? "AND m.is_featured" : ""}
      ORDER BY m.is_featured DESC, m.sort_order, m.id
      LIMIT $1`,
     [opts.limit ?? 200],

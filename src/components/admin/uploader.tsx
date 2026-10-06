@@ -34,13 +34,16 @@ export function Uploader({ usage = "gallery", category }: { usage?: "gallery" | 
   return (
     <div className="border border-dashed border-line-strong bg-paper p-5">
       <label htmlFor="upload" className="font-medium">Upload images</label>
-      <p className="mt-1 text-sm text-taupe">JPEG, PNG, WebP or HEIC, up to 15 MB each. Photos are resized, converted and stripped of location data. New uploads start unpublished.</p>
+      <p className="mt-1 text-sm text-taupe">
+        JPEG, PNG, WebP or HEIC, up to 15 MB each. Photos are resized, converted and stripped of location data. New uploads start unpublished.
+        {usage === "site" && " You can also upload a short MP4 or WebM video (up to 40 MB) for the homepage hero."}
+      </p>
       <input
         ref={input}
         id="upload"
         type="file"
         multiple
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        accept={usage === "site" ? "image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm" : "image/jpeg,image/png,image/webp,image/heic,image/heif"}
         className="mt-4 block text-sm file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2.5 file:text-sm"
         onChange={(e) => e.target.files?.length && upload(e.target.files)}
       />

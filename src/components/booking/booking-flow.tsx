@@ -836,7 +836,7 @@ export function SlotGroups({ slots, busyStart, selected, onChoose }: { slots: Sl
                   disabled={!!busyStart}
                   aria-pressed={isSel}
                   onClick={() => onChoose(s)}
-                  className={`btn min-h-12 px-0 tabular-nums tracking-normal ${isSel ? "btn-primary" : "btn-outline border-line-strong"} ${isBusy ? "animate-pulse" : ""}`}
+                  className={`btn min-h-12 px-0 text-[0.95rem] tabular-nums tracking-normal normal-case ${isSel ? "btn-primary" : "btn-outline border-line-strong"} ${isBusy ? "animate-pulse" : ""}`}
                 >
                   {s.label}
                 </button>

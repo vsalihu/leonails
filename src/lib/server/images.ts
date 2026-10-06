@@ -66,3 +66,23 @@ export async function deleteMedia(id: number) {
   const [r] = await db`DELETE FROM media_assets WHERE id = ${id} RETURNING storage_key`;
   if (r) await storage().removePrefix(r.storage_key);
 }
+
+export const MAX_VIDEO_BYTES = 40 * 1024 * 1024;
+
+/**
+ * Stores a short hero video after checking its file signature (not its name or
+ * the browser-supplied type). MP4 (H.264) is the most compatible; WebM is
+ * accepted too. Videos are not re-encoded here, so keep them short and
+ * web-optimised before uploading.
+ */
+export async function storeVideo(input: Buffer): Promise<{ storageKey: string; mime: "video/mp4" | "video/webm"; ext: "mp4" | "webm" }> {
+  if (input.length === 0) throw new ImageError("The file is empty.");
+  if (input.length > MAX_VIDEO_BYTES) throw new ImageError("Videos must be 40 MB or smaller. Export a shorter or more compressed version (about 10 seconds at 1080p works well).");
+  const isMp4 = input.subarray(4, 8).toString("latin1") === "ftyp";
+  const isWebm = input.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+  if (!isMp4 && !isWebm) throw new ImageError("That file isn't a supported video. Please upload an MP4 or WebM.");
+  const ext = isMp4 ? "mp4" : "webm";
+  const key = `site/${new Date().toISOString().slice(0, 7)}/${randomBytes(12).toString("hex")}`;
+  await storage().put(`${key}/video.${ext}`, input, isMp4 ? "video/mp4" : "video/webm");
+  return { storageKey: key, mime: isMp4 ? "video/mp4" : "video/webm", ext };
+}

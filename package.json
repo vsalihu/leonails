@@ -22,6 +22,7 @@
     "@aws-sdk/client-s3": "^3.1146.0",
     "@fontsource-variable/bodoni-moda": "^5.3.0",
     "@fontsource-variable/hanken-grotesk": "^5.3.0",
+    "@fontsource/bodoni-moda": "^5.3.0",
     "@phosphor-icons/react": "^2.1.10",
     "dotenv": "^18.0.5",
     "luxon": "^3.7.2",

@@ -24,7 +24,7 @@ Snapshot of what is built, how it was verified, and what is still needed. The bu
 | `eslint .` (Next.js core-web-vitals + TypeScript + React Compiler rules) | Pass, 0 warnings |
 | `next build` (production) | Pass |
 | Unit + integration (`vitest`, real PostgreSQL) | **48 passed** (4 files) |
-| End-to-end (`playwright`, Chromium, desktop and Pixel 7 emulation) | **41 passed**, 1 skipped (a mobile-only test, skipped on the desktop project by design) |
+| End-to-end (`playwright`, Chromium, desktop and Pixel 7 emulation) | **42 passed**, 2 skipped (single-project tests skipped on the other project by design) |
 | Backup and restore round trip (`scripts/backup.sh` then `pg_restore`) | Pass (row counts matched) |
 
 ## Acceptance scenarios
@@ -106,4 +106,5 @@ The **Before launch** panel on Admin > Today lists any example content still in 
 * No customer accounts, online payments, gift cards, SMS/WhatsApp, waiting lists or loyalty points (out of scope per the plan).
 * Phone numbers are normalised for UK formats when checking first-visit eligibility. Guest identity checks reduce abuse but can't prove someone is a new client.
 * The site has a single light editorial theme with dark accent sections, as the brief describes, and no separate dark mode.
-* Placeholder images are generated abstract artwork (no stock photography was reachable from the build environment), clearly marked "Placeholder image" and flagged as examples.
+* Placeholder images are rendered still lifes (glossy nails on satin and leopard silk) generated in code, as no stock photography was reachable from the build environment. Each is marked "Placeholder image" and flagged as an example.
+* Hero video is uploaded as-is (MP4/WebM, up to 40 MB) and not transcoded on the server, so export it web-optimised (H.264 MP4, about 1080p, `faststart`).

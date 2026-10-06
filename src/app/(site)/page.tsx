@@ -1,18 +1,19 @@
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { MediaImage } from "@/components/media-image";
-import { Parallax } from "@/components/parallax";
+import { HeroMedia } from "@/components/hero-media";
 import { TestimonialFigure } from "@/components/testimonial";
-import { getContent, galleryItems, openingHours, publicSettings, siteImages, testimonials } from "@/lib/server/public-content";
+import { getContent, galleryItems, heroVideoSource, openingHours, publicSettings, siteImages, testimonials } from "@/lib/server/public-content";
 import { listTreatments } from "@/lib/server/catalogue";
 import { publicPromotion } from "@/lib/server/promotions";
 import { formatDuration, formatPence } from "@/lib/money";
 
 export default async function HomePage() {
-  const [s, content, images, treatments, gallery, reviews, promo, hours] = await Promise.all([
+  const [s, content, images, heroVideo, treatments, gallery, reviews, promo, hours] = await Promise.all([
     publicSettings(),
     getContent(["home.hero", "home.intro", "home.visit"]),
     siteImages(["home.hero", "home.intro"]),
+    heroVideoSource(),
     listTreatments(),
     galleryItems({ limit: 4 }), // featured first, then most recent
     testimonials({ featuredOnly: true, limit: 3 }),
@@ -21,43 +22,51 @@ export default async function HomePage() {
   ]);
   const featured = treatments.filter((t) => t.isFeatured).slice(0, 4);
   const hero = content["home.hero"];
+  const headline = splitHeadline(hero.title ?? "");
   const [lead, ...others] = reviews;
 
   return (
     <>
-      {/* Hero: asymmetric split, copy left, photograph right with a leopard edge */}
-      <section className="mx-auto grid max-w-[1400px] gap-10 px-4 pb-16 pt-10 md:px-8 lg:min-h-[calc(100dvh-4.5rem)] lg:grid-cols-[1fr_minmax(0,0.92fr)] lg:items-center lg:gap-16 lg:pb-20 lg:pt-12">
-        <div className="hero-copy max-w-xl">
-          <p className="eyebrow text-champagne-text">{s.publicLocation}</p>
-          <h1 className="display mt-5 text-[2.9rem] xs:text-5xl md:text-6xl xl:text-7xl">{hero.title}</h1>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-taupe">{hero.body}</p>
-          <div className="mt-9 flex flex-wrap gap-3">
+      {/* Hero: copy left; photograph or video bleeds to the right edge, joined by a leopard seam. */}
+      <section className="relative grid lg:min-h-[calc(100dvh-4.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+        <div className="hero-copy flex flex-col justify-center px-4 pb-14 pt-12 md:px-8 lg:py-20 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))] lg:pr-16">
+          <p className="eyebrow text-champagne-text">{s.publicLocation}, by appointment</p>
+          <h1 className="display mt-7 text-[3rem] leading-[1.02] xs:text-[3.4rem] md:text-[4.4rem] lg:text-[3.9rem] lg:[&>*]:whitespace-nowrap xl:text-[4.9rem] 2xl:text-[5.6rem]">
+            <span className="block">{headline.roman}</span>
+            {headline.italic && (
+              <>
+                <span className="display-italic block">{headline.italic}</span>
+              </>
+            )}
+          </h1>
+          <p className="mt-8 max-w-md text-lg leading-relaxed text-taupe">{hero.body}</p>
+          <div className="mt-10 flex flex-wrap gap-3">
             <Link href="/book" className="btn btn-primary">Book an appointment</Link>
             <Link href="/treatments" className="btn btn-outline">View treatments</Link>
           </div>
         </div>
-        <div className="hero-image relative">
-          <div className="relative grid grid-cols-[1fr_14px] gap-0 md:grid-cols-[1fr_22px]">
-            <Parallax className="aspect-[4/5] max-h-[78dvh] w-full bg-cream">
-              <MediaImage media={images["home.hero"]} sizes="(min-width: 1024px) 45vw, 100vw" priority />
-            </Parallax>
-            <div className="leopard-light h-full" aria-hidden />
+        <div className="hero-image relative grid grid-cols-[10px_1fr] md:grid-cols-[16px_1fr]">
+          <div className="leopard-light" aria-hidden />
+          <div className="relative aspect-[4/5] lg:aspect-auto">
+            <HeroMedia image={images["home.hero"]} video={heroVideo} sizes="(min-width: 1024px) 46vw, 100vw" />
           </div>
         </div>
       </section>
 
       {/* Introduction: editorial text with an inset image */}
       <section className="border-t hairline bg-paper">
-        <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-20 md:grid-cols-12 md:px-8 md:py-28">
-          <div className="md:col-span-5 md:col-start-2" data-reveal>
-            <div className="relative aspect-[4/3] w-full overflow-hidden">
-              <MediaImage media={images["home.intro"]} sizes="(min-width: 768px) 38vw, 100vw" />
+        <div className="mx-auto grid max-w-[1440px] gap-12 px-4 py-24 md:grid-cols-12 md:px-8 md:py-36">
+          <div className="md:col-span-6 md:col-start-1">
+            <div data-reveal="image">
+              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <MediaImage media={images["home.intro"]} sizes="(min-width: 768px) 46vw, 100vw" />
+              </div>
             </div>
           </div>
           <div className="md:col-span-5 md:col-start-8 md:self-center" data-reveal style={{ ["--reveal-index" as string]: 1 }}>
             <h2 className="display text-4xl md:text-5xl">{content["home.intro"].title}</h2>
             <p className="mt-6 text-lg leading-relaxed text-taupe">{content["home.intro"].body}</p>
-            <Link href="/about" className="link-underline mt-8 inline-block text-sm font-medium">
+            <Link href="/about" className="nav-link mt-6">
               About Rugile
             </Link>
           </div>
@@ -66,10 +75,10 @@ export default async function HomePage() {
 
       {/* Treatments: an editorial price list, not cards */}
       <section className="bg-cream">
-        <div className="mx-auto max-w-[1400px] px-4 py-20 md:px-8 md:py-28">
-          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="mx-auto max-w-[1440px] px-4 py-24 md:px-8 md:py-36">
+          <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
             <div data-reveal>
-              <h2 className="display text-4xl md:text-5xl">Treatments</h2>
+              <h2 className="display text-5xl md:text-6xl">The <span className="display-italic">menu</span></h2>
               <p className="mt-5 max-w-sm leading-relaxed text-taupe">Prices include everything listed. Extras such as French tips or removal are added when you book.</p>
               <Link href="/treatments" className="btn btn-outline mt-8">View treatments</Link>
             </div>
@@ -91,11 +100,11 @@ export default async function HomePage() {
 
       {/* Gallery preview: asymmetric mosaic */}
       {gallery.length > 0 && (
-        <section className="mx-auto max-w-[1400px] px-4 py-20 md:px-8 md:py-28">
+        <section className="mx-auto max-w-[1440px] px-4 py-24 md:px-8 md:py-36">
           <div className="flex flex-wrap items-end justify-between gap-6" data-reveal>
-            <h2 className="display text-4xl md:text-5xl">Recent work</h2>
+            <h2 className="display text-5xl md:text-6xl">Recent <span className="display-italic">work</span></h2>
             <Link href="/gallery" className="group inline-flex items-center gap-2 text-sm font-medium">
-              <span className="link-underline">Open the gallery</span>
+              <span className="nav-link">Open the gallery</span>
               <ArrowRight size={16} aria-hidden className="transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
@@ -123,7 +132,7 @@ export default async function HomePage() {
       {/* Testimonials: one night section, a lead quote and two supporting */}
       {lead && (
         <section className="on-night bg-night text-ivory">
-          <div className="mx-auto grid max-w-[1400px] gap-14 px-4 py-20 md:px-8 md:py-28 lg:grid-cols-[1.25fr_1fr]">
+          <div className="mx-auto grid max-w-[1440px] gap-14 px-4 py-24 md:px-8 md:py-36 lg:grid-cols-[1.25fr_1fr]">
             <div data-reveal>
               <TestimonialFigure t={lead} size="lead" />
             </div>
@@ -155,11 +164,11 @@ export default async function HomePage() {
       )}
 
       {/* Visit: hours list and location note */}
-      <section className="mx-auto max-w-[1400px] px-4 py-20 md:px-8 md:py-28">
+      <section className="mx-auto max-w-[1440px] px-4 py-24 md:px-8 md:py-36">
         <div className="grid gap-14 md:grid-cols-2">
           <div data-reveal>
             <p className="eyebrow text-champagne-text">Visit</p>
-            <h2 className="display mt-4 text-4xl md:text-5xl">By appointment in {s.publicLocation}</h2>
+            <h2 className="display mt-5 text-5xl md:text-6xl">By appointment in <span className="display-italic">{s.publicLocation}</span></h2>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-taupe">{content["home.visit"].body}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/book" className="btn btn-primary">Book an appointment</Link>
@@ -182,4 +191,11 @@ export default async function HomePage() {
       </section>
     </>
   );
+}
+
+/** "Beautiful nails. Considered detail." -> roman first line, italic last sentence. */
+function splitHeadline(title: string): { roman: string; italic: string | null } {
+  const parts = title.trim().split(/(?<=[.!?])\s+/);
+  if (parts.length < 2) return { roman: title, italic: null };
+  return { roman: parts.slice(0, -1).join(" "), italic: parts[parts.length - 1] };
 }

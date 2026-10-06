@@ -7,13 +7,16 @@ import { sql } from "@/lib/server/db";
 import { deleteMedia } from "@/lib/server/images";
 import { audit } from "@/lib/server/audit";
 
-const SLOTS = ["home.hero", "home.intro", "about.portrait", "visit.studio"];
+const IMAGE_SLOTS = ["home.hero", "home.intro", "about.portrait", "visit.studio"];
+const VIDEO_SLOTS = ["home.hero.video"];
 
 export async function saveMediaAction(_: ActionState, form: FormData): Promise<ActionState> {
   const admin = await requireAdmin();
   const id = fd.int(form, "id")!;
   const alt = fd.str(form, "alt");
   const publish = fd.bool(form, "published");
+  const [m] = await sql()`SELECT kind FROM media_assets WHERE id = ${id}`;
+  if (!m) return fail("Not found.");
   if (publish && alt.length < 5) return fail("Add a short description (alt text) before publishing.", { alt: "Describe the image for people who can't see it." });
   const fx = Number(form.get("focalX") ?? 50);
   const fy = Number(form.get("focalY") ?? 50);
@@ -23,7 +26,9 @@ export async function saveMediaAction(_: ActionState, form: FormData): Promise<A
       focal_x = ${Number.isFinite(fx) ? fx : 50}, focal_y = ${Number.isFinite(fy) ? fy : 50}, is_example = false
     WHERE id = ${id}`;
   const slot = fd.opt(form, "slot");
-  if (slot && SLOTS.includes(slot)) {
+  if (slot === "none:home.hero.video") {
+    await sql()`DELETE FROM site_images WHERE slot = 'home.hero.video' AND media_id = ${id}`;
+  } else if (slot && (m.kind === "video" ? VIDEO_SLOTS : IMAGE_SLOTS).includes(slot)) {
     await sql()`INSERT INTO site_images (slot, media_id) VALUES (${slot}, ${id}) ON CONFLICT (slot) DO UPDATE SET media_id = EXCLUDED.media_id`;
   }
   await audit(sql(), { type: "admin", id: admin.id }, "media.updated", "media", id, { details: { publish, slot } });

@@ -2,6 +2,11 @@ import { expect, test } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { db } from "./db";
 
+// Repeated runs from one machine would otherwise hit the real per-IP limits.
+test.beforeEach(async () => {
+  await db`DELETE FROM rate_limits WHERE bucket LIKE 'review:%' OR bucket LIKE 'contact%'`;
+});
+
 test("contact form validates, stores the enquiry and confirms receipt", async ({ page }) => {
   await page.goto("/contact");
   await page.getByRole("button", { name: "Send message" }).click();
