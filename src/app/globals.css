@@ -287,3 +287,16 @@ body {
   from { opacity: 0; transform: scale(0.85); }
   to { opacity: 1; transform: none; }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lightbox[open] {
+    animation: fade-in 220ms var(--ease-out-soft);
+  }
+  .lightbox-image {
+    animation: settle 300ms var(--ease-out-soft);
+  }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
