@@ -163,7 +163,7 @@ export function swatchSvg(w: number, h: number, style: SwatchStyle, seed: number
 <rect width="100%" height="100%" fill="url(#glow)"/>
 ${nails.join("\n")}
 <rect width="100%" height="100%" filter="url(#grain)"/>
-<text x="${Math.round(w * 0.04)}" y="${Math.round(h - h * 0.045)}" font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" letter-spacing="2" fill="${dark ? "#F7F3EC" : "#2B211D"}" fill-opacity="0.6">${label.toUpperCase()}</text>
+<text x="${Math.round(w * 0.04)}" y="${Math.round(h - h * 0.085)}" font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" letter-spacing="2" fill="${dark ? "#F7F3EC" : "#2B211D"}" fill-opacity="0.6">${label.toUpperCase()}</text>
 </svg>`;
 }
 
@@ -187,7 +187,7 @@ export function studioSvg(w: number, h: number, seed: number, label = "Placehold
 <rect x="${w * 0.4}" y="${h * 0.695}" width="${w * 0.018}" height="${h * 0.125}" fill="#2B211D" opacity="0.85"/>
 <ellipse cx="${w * 0.2}" cy="${h * 0.645}" rx="${w * 0.03}" ry="${h * 0.018}" fill="#A88958"/>
 <rect width="100%" height="100%" filter="url(#grain)"/>
-<text x="${Math.round(w * 0.04)}" y="${Math.round(h - h * 0.045)}" font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" letter-spacing="2" fill="#2B211D" fill-opacity="0.55">${label.toUpperCase()}</text>
+<text x="${Math.round(w * 0.04)}" y="${Math.round(h - h * 0.085)}" font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" letter-spacing="2" fill="#2B211D" fill-opacity="0.55">${label.toUpperCase()}</text>
 </svg>`;
 }
 

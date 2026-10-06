@@ -2,8 +2,9 @@ import "server-only";
 import postgres from "postgres";
 import { env } from "./env";
 
-type Sql = postgres.Sql<Record<string, never>>;
-export type Tx = postgres.TransactionSql<Record<string, never>>;
+type Types = { bigint: number };
+type Sql = postgres.Sql<Types>;
+export type Tx = postgres.TransactionSql<Types>;
 export type Db = Sql | Tx;
 
 const globalForDb = globalThis as unknown as { __sql?: Sql };
@@ -20,7 +21,7 @@ export function sql(): Sql {
       transform: { undefined: null },
     });
   }
-  return globalForDb.__sql;
+  return globalForDb.__sql!;
 }
 
 /** Postgres error helper. */

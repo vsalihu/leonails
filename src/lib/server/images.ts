@@ -21,7 +21,7 @@ export type ProcessedImage = { storageKey: string; width: number; height: number
 export async function processImage(input: Buffer, prefix: "gallery" | "site" | "testimonial" | "review"): Promise<ProcessedImage> {
   if (input.length === 0) throw new ImageError("The file is empty.");
   if (input.length > MAX_UPLOAD_BYTES) throw new ImageError("Images must be 15 MB or smaller.");
-  let meta: sharp.Metadata;
+  let meta: Awaited<ReturnType<ReturnType<typeof sharp>["metadata"]>>;
   try {
     meta = await sharp(input, { failOn: "error", limitInputPixels: 80_000_000 }).metadata();
   } catch {

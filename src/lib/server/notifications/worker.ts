@@ -18,7 +18,7 @@ function backoffSeconds(attempt: number) {
  */
 export async function runDueJobs(limit = 20): Promise<{ processed: number }> {
   const db = sql();
-  const jobs = await db<JobRow[]>`
+  const jobs = await db<(JobRow & { attempts: number; max_attempts: number })[]>`
     UPDATE notification_jobs SET status = 'processing', attempts = attempts + 1,
       locked_until = now() + make_interval(secs => ${LOCK_SECONDS}), updated_at = now()
     WHERE id IN (
@@ -30,7 +30,7 @@ export async function runDueJobs(limit = 20): Promise<{ processed: number }> {
       LIMIT ${limit})
     RETURNING id, kind, recipient, payload, booking_id, attempts, max_attempts`;
 
-  for (const job of jobs as (JobRow & { attempts: number; max_attempts: number })[]) {
+  for (const job of jobs) {
     try {
       const rendered = await render(db, job);
       if ("skip" in rendered) {
