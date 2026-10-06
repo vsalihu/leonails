@@ -8,6 +8,11 @@ export type SendResult = { status: "sent" | "captured"; providerMessageId: strin
 
 let transporter: Transporter | undefined;
 
+/** Test hook: drop the cached SMTP transport after env changes. */
+export function resetTransportForTests() {
+  transporter = undefined;
+}
+
 function smtp(): Transporter {
   if (!transporter) {
     const e = env();

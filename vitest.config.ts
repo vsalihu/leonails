@@ -3,9 +3,11 @@ import path from "node:path";
 
 export default defineConfig({
   resolve: {
-    alias: { "@": path.resolve(__dirname, "src") },
-    // Lets tests import modules guarded by `import "server-only"`.
-    conditions: ["react-server", "node", "import", "default"],
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+      // Lets tests import modules guarded by `import "server-only"`.
+      "server-only": path.resolve(__dirname, "tests/server-only-stub.ts"),
+    },
   },
   test: {
     environment: "node",
@@ -14,6 +16,5 @@ export default defineConfig({
     // Integration tests share one database; run files sequentially.
     fileParallelism: false,
     testTimeout: 30_000,
-    server: { deps: { inline: ["server-only"] } },
   },
 });

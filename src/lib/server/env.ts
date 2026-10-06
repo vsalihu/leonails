@@ -59,3 +59,8 @@ export function mailConfigured(): boolean {
   const e = env();
   return e.MAIL_DRIVER === "smtp" && !!e.SMTP_HOST && !!e.MAIL_FROM;
 }
+
+/** Test hook: re-read process.env on next access. */
+export function resetEnvCacheForTests() {
+  cached = undefined;
+}

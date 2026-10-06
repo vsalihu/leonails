@@ -44,9 +44,9 @@ export async function loadBusy(
     WHERE technician_id = ${technicianId}
       AND period && tstzrange(${from}, ${to})
       AND (kind = 'booking' OR expires_at > now())
-      AND booking_id IS DISTINCT FROM ${opts.excludeBookingId ?? null}
-      AND hold_id IS DISTINCT FROM ${opts.excludeHoldId ?? null}
-      AND NOT (kind = 'hold' AND hold_id IN (SELECT id FROM slot_holds WHERE session_id = ${opts.excludeSessionId ?? ""}))`;
+      ${opts.excludeBookingId ? db`AND booking_id IS DISTINCT FROM ${opts.excludeBookingId}` : db``}
+      ${opts.excludeHoldId ? db`AND hold_id IS DISTINCT FROM ${opts.excludeHoldId}` : db``}
+      ${opts.excludeSessionId ? db`AND NOT (kind = 'hold' AND hold_id IN (SELECT id FROM slot_holds WHERE session_id = ${opts.excludeSessionId}))` : db``}`;
   return rows.map((r) => ({ start: r.s, end: r.e }));
 }
 
