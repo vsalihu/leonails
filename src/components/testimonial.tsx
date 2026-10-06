@@ -23,7 +23,7 @@ export function TestimonialFigure({ t, size }: { t: PublicTestimonial; size: "le
       )}
       <div>
         {t.rating && (
-          <p className="flex gap-0.5 text-champagne" aria-label={`${t.rating} out of 5`}>
+          <p className="flex gap-0.5 text-champagne" role="img" aria-label={`Rated ${t.rating} out of 5`}>
             {Array.from({ length: t.rating }, (_, i) => (
               <Star key={i} size={lead ? 16 : 13} weight="fill" aria-hidden />
             ))}

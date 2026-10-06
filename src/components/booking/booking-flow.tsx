@@ -363,7 +363,7 @@ export function BookingFlow(props: {
         <nav aria-label="Booking progress" className="mb-10">
           <ol className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
             {STEPS.map((s, i) => (
-              <li key={s.id} className={`flex items-center gap-2 ${i === stepIndex ? "text-ink" : i < stepIndex ? "text-taupe" : "text-taupe/70"}`} aria-current={i === stepIndex ? "step" : undefined}>
+              <li key={s.id} className={`flex items-center gap-2 ${i === stepIndex ? "text-ink" : "text-taupe"}`} aria-current={i === stepIndex ? "step" : undefined}>
                 <span
                   aria-hidden
                   className={`flex h-6 w-6 items-center justify-center rounded-full border text-[0.7rem] ${i < stepIndex ? "border-ink bg-ink text-ivory" : i === stepIndex ? "border-ink" : "border-line-strong/60"}`}

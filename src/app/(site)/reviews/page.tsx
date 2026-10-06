@@ -31,7 +31,7 @@ export default async function ReviewsPage() {
               )}
               <figure>
                 {t.rating && (
-                  <p className="flex gap-0.5 text-champagne-text" aria-label={`${t.rating} out of 5`}>
+                  <p className="flex gap-0.5 text-champagne-text" role="img" aria-label={`Rated ${t.rating} out of 5`}>
                     {Array.from({ length: t.rating }, (_, n) => <Star key={n} size={15} weight="fill" aria-hidden />)}
                   </p>
                 )}
