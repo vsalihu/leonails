@@ -29,9 +29,9 @@ export default async function HomePage() {
   return (
     <>
       {film.desktop || film.mobile ? (
-        /* Hero film: full-bleed, headline set over the dark field of the frame. */
-        <section className={`hero-film on-night relative isolate overflow-hidden bg-night text-ivory ${film.mobile ? "hero-film--portrait" : ""}`}>
-          <div className="hero-film-stage relative lg:h-[calc(100svh-4.75rem)] lg:min-h-[620px] lg:max-h-[1080px]">
+        /* Hero film: full-bleed under the transparent header, headline set over the dark field of the frame. */
+        <section className={`hero-film on-night relative isolate -mt-16 overflow-hidden bg-night text-ivory md:-mt-[4.75rem] ${film.mobile ? "hero-film--portrait" : ""}`}>
+          <div className="hero-film-stage relative lg:h-svh lg:min-h-[680px] lg:max-h-[1160px]">
             <div className="hero-film-media">
               <HeroFilm desktop={film.desktop} mobile={film.mobile} label={`Video: ${(film.desktop ?? film.mobile)!.alt || "a manicure in close-up"}`} />
               <div className="hero-film-shade pointer-events-none absolute inset-0" aria-hidden />

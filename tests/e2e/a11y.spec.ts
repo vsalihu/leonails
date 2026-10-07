@@ -45,9 +45,26 @@ test("keyboard: skip link, menu and booking steps are operable without a mouse",
   await expect(page.getByRole("heading", { name: "Choose a day and time" })).toBeFocused();
   if (info.project.name === "mobile") {
     await page.goto("/");
+    await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: "Open menu" }).click();
-    await expect(page.getByRole("navigation", { name: "Mobile" })).toBeVisible();
+    const menu = page.getByRole("navigation", { name: "Menu" });
+    await expect(menu).toBeVisible();
+    // the panel covers the whole screen (it was once squashed into the header by its backdrop blur)
+    const box = await page.locator("#site-menu").boundingBox();
+    const vh = page.viewportSize()!.height;
+    expect(box!.y).toBe(0);
+    expect(box!.height).toBeGreaterThanOrEqual(vh - 1);
+    await expect(menu.getByRole("link", { name: /Treatments/ })).toBeFocused();
+    // the page behind is out of reach while the menu is open
+    await expect(page.locator("main")).toHaveAttribute("inert", "");
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("navigation", { name: "Mobile" })).toHaveCount(0);
+    await expect(menu).toBeHidden();
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();
+    await expect(page.locator("main")).not.toHaveAttribute("inert", "");
+    // following a link closes the menu
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await menu.getByRole("link", { name: /Gallery/ }).click();
+    await expect(page).toHaveURL(/\/gallery$/);
+    await expect(menu).toBeHidden();
   }
 });

@@ -43,6 +43,7 @@
 :root {
   --z-nav: 40;
   --z-sticky-cta: 30;
+  --z-menu: 38;
   --z-overlay: 60;
   --z-toast: 70;
   color-scheme: light;
@@ -440,8 +441,8 @@ body::after {
 .hero-film--portrait .hero-film-media {
   /* film first: nearly the whole screen, the headline peeking in below it */
   aspect-ratio: auto;
-  height: calc(100svh - 16.5rem);
-  min-height: 400px;
+  height: calc(100svh - 12.5rem);
+  min-height: 460px;
   max-height: 900px;
 }
 .hero-film--portrait .hero-film-copy {
@@ -449,7 +450,7 @@ body::after {
 }
 @media (min-width: 1024px) {
   .hero-film .hero-film-stage {
-    height: calc(100svh - 4.75rem);
+    height: 100svh;
   }
   .hero-film .hero-film-media {
     position: absolute;
@@ -509,4 +510,239 @@ body::after {
 @keyframes scroll-cue {
   0% { transform: translateY(-100%); }
   60%, 100% { transform: translateY(260%); }
+}
+
+/* Site header ----------------------------------------------------------------
+   Three tones: the ivory bar (default), transparent over the homepage film,
+   and transparent over the open menu panel. */
+.site-header {
+  color: var(--color-ink);
+  background: rgb(247 243 236 / 0.86);
+  border-bottom: 1px solid rgb(43 33 29 / 0.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+  transition:
+    background-color 450ms var(--ease-out-soft),
+    color 450ms var(--ease-out-soft),
+    border-color 450ms var(--ease-out-soft);
+}
+.site-header-sub {
+  color: var(--color-taupe);
+  transition: color 450ms var(--ease-out-soft);
+}
+.site-header-book {
+  background: var(--color-ink);
+  color: var(--color-ivory);
+}
+.site-header-book::before {
+  background: var(--color-night-2);
+}
+.site-header[data-tone="film"],
+.site-header[data-tone="menu"] {
+  color: var(--color-ivory);
+  background: transparent;
+  border-bottom-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.site-header[data-tone="film"] .site-header-sub,
+.site-header[data-tone="menu"] .site-header-sub {
+  color: rgb(247 243 236 / 0.7);
+}
+.site-header[data-tone="film"] .site-header-book {
+  background: transparent;
+  color: var(--color-ivory);
+  border: 1px solid rgb(247 243 236 / 0.55);
+}
+.site-header[data-tone="film"] .site-header-book::before {
+  background: var(--color-ivory);
+}
+.site-header[data-tone="film"] .site-header-book:hover {
+  color: var(--color-ink);
+}
+.site-header[data-tone="film"] :focus-visible,
+.site-header[data-tone="menu"] :focus-visible {
+  outline-color: var(--color-ivory);
+}
+/* a soft shade under the transparent header so the wordmark always reads over the film */
+.site-header[data-tone="film"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -2.5rem;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgb(25 21 18 / 0.5), rgb(25 21 18 / 0));
+}
+
+/* Desktop links: spaced capitals roll up to the same word in Bodoni italic. */
+.nav-roll {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+}
+.nav-roll-track {
+  display: grid;
+  height: 1.5rem;
+  overflow: hidden;
+}
+.nav-roll-track > span {
+  display: flex;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  transition: transform 520ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.nav-roll-caps {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.nav-roll-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.12rem;
+  letter-spacing: 0.01em;
+}
+.nav-roll:hover .nav-roll-track > span,
+.nav-roll:focus-visible .nav-roll-track > span,
+.nav-roll.is-active .nav-roll-track > span {
+  transform: translateY(-100%);
+}
+
+/* Menu toggle: two hairlines of unequal length that cross into an X, with a rolling label. */
+.menu-toggle-icon {
+  position: relative;
+  display: block;
+  width: 1.6rem;
+  height: 0.75rem;
+}
+.menu-toggle-icon > span {
+  position: absolute;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  transition:
+    transform 520ms cubic-bezier(0.65, 0, 0.35, 1),
+    width 520ms cubic-bezier(0.65, 0, 0.35, 1),
+    top 520ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.menu-toggle-icon > span:first-child {
+  top: 0;
+  width: 100%;
+}
+.menu-toggle-icon > span:last-child {
+  top: calc(100% - 1px);
+  width: 62%;
+}
+.menu-toggle:hover .menu-toggle-icon > span:last-child {
+  width: 100%;
+}
+.menu-toggle[aria-expanded="true"] .menu-toggle-icon > span {
+  top: 50%;
+  width: 100%;
+}
+.menu-toggle[aria-expanded="true"] .menu-toggle-icon > span:first-child {
+  transform: rotate(32deg);
+}
+.menu-toggle[aria-expanded="true"] .menu-toggle-icon > span:last-child {
+  transform: rotate(-32deg);
+}
+.menu-toggle-label {
+  display: grid;
+  height: 1rem;
+  overflow: hidden;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.menu-toggle-label > span {
+  height: 1rem;
+  line-height: 1rem;
+  transition: transform 520ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.menu-toggle[aria-expanded="true"] .menu-toggle-label > span {
+  transform: translateY(-100%);
+}
+
+/* Menu panel: unrolls from the top like a blind; links rise in one after another. */
+.site-menu {
+  visibility: hidden;
+  clip-path: inset(0 0 100% 0);
+  transition:
+    clip-path 700ms cubic-bezier(0.76, 0, 0.24, 1),
+    visibility 0s linear 700ms;
+}
+.site-menu[data-open] {
+  visibility: visible;
+  clip-path: inset(0 0 0 0);
+  transition:
+    clip-path 760ms cubic-bezier(0.76, 0, 0.24, 1),
+    visibility 0s;
+}
+.site-menu-list > li,
+.site-menu-foot {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition:
+    opacity 300ms var(--ease-out-soft),
+    transform 300ms var(--ease-out-soft);
+}
+.site-menu[data-open] .site-menu-list > li,
+.site-menu[data-open] .site-menu-foot {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms var(--ease-out-soft),
+    transform 700ms var(--ease-out-soft);
+  transition-delay: calc(260ms + var(--i, 0) * 70ms);
+}
+.site-menu-list > li + li {
+  border-top: 1px solid rgb(247 243 236 / 0.1);
+}
+.site-menu-link {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  align-items: baseline;
+  padding-block: 0.95rem;
+}
+.site-menu-num {
+  grid-row: span 2;
+  align-self: start;
+  padding-top: 0.85rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--color-champagne-light);
+  font-variant-numeric: tabular-nums;
+}
+.site-menu-word {
+  font-family: var(--font-display);
+  font-size: clamp(2.35rem, 11vw, 3.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  transition:
+    color 300ms var(--ease-out-soft),
+    transform 500ms var(--ease-out-soft);
+}
+.site-menu-note {
+  margin-top: 0.35rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(247 243 236 / 0.5);
+}
+.site-menu-link:hover .site-menu-word,
+.site-menu-link:focus-visible .site-menu-word,
+.site-menu-link[aria-current="page"] .site-menu-word {
+  font-style: italic;
+  color: var(--color-champagne-light);
+}
+.site-menu-link:hover .site-menu-word {
+  transform: translateX(0.35rem);
 }
