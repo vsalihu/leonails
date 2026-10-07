@@ -8,6 +8,8 @@
  * - Prices, durations, hours and copy are EXAMPLES, not approved business rules.
  */
 import "dotenv/config";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import postgres from "postgres";
 import { leopardSvg } from "./lib/placeholder-art";
 import { markPlaceholder, rasterTile, renderStillLife, type StillLife, type Swatch } from "./lib/still-life";
@@ -32,6 +34,9 @@ async function unit(name: string, fn: (tx: Tx) => Promise<void>) {
     console.log(`seeded: ${name}`);
   });
 }
+
+const OWNER_PROVENANCE =
+  "Rugile's own work. Photo supplied by the owner (October 2026); metadata removed. Confirm the client is happy for it to be published.";
 
 const PLACEHOLDER_PROVENANCE =
   "Generated placeholder artwork (created locally, no third-party licence). Not Rugile's work. Replace with Rugile's own photography.";
@@ -138,6 +143,54 @@ async function main() {
               'First visit? Use code WELCOME20 for 20% off your treatment.', true)`;
   });
 
+  // Rugile's own photographs (content/gallery). Real work, not examples.
+  // Runs before the placeholder unit; on databases that already have
+  // placeholders it takes over their gallery and website slots.
+  await unit("owner-gallery-2026-10", async (tx) => {
+    const photos: { file: string; cat: string; alt: string; caption: string; featured: boolean; focal: [number, number]; slots?: string[] }[] = [
+      { file: "chocolate-caramel-marble.jpg", cat: "nail-art", featured: true, focal: [48, 58], slots: ["home.hero"],
+        caption: "Chocolate and caramel marble",
+        alt: "Square nails in glossy chocolate brown, with caramel marble and gold flecks on the accent nails" },
+      { file: "sheer-pink-gel.jpg", cat: "nude", featured: true, focal: [45, 62], slots: ["home.intro"],
+        caption: "Sheer pink gel",
+        alt: "Short square nails in a glossy sheer pink gel, hands resting one over the other" },
+      { file: "soft-pink-3d-flowers.jpg", cat: "nail-art", featured: true, focal: [40, 58], slots: ["about.portrait"],
+        caption: "Soft pink with 3D flowers",
+        alt: "Milky pink square nails with raised pink 3D flowers and tiny gold beads" },
+      { file: "white-french-silver-flower.jpg", cat: "french", featured: true, focal: [35, 66], slots: ["visit.studio"],
+        caption: "White French with a silver flower",
+        alt: "Square white French tips on a pink base, one nail with a black and silver line flower" },
+      { file: "white-french-silver-charms.jpg", cat: "occasion", featured: false, focal: [50, 55],
+        caption: "French with silver charms",
+        alt: "White French tips with silver cross charms, studs and beaded detail on the accent nails" },
+      { file: "baby-blue-french-hibiscus.jpg", cat: "french", featured: false, focal: [45, 62],
+        caption: "Baby blue French with hibiscus",
+        alt: "Square nails with baby blue French tips and a white hibiscus flower on one nail" },
+    ];
+    const dir = path.join(process.cwd(), "content", "gallery");
+    const available = photos.filter((ph) => existsSync(path.join(dir, ph.file)));
+    if (available.length === 0) return;
+    let order = 0;
+    for (const ph of available) {
+      const img = await processImage(readFileSync(path.join(dir, ph.file)), "gallery");
+      const id = await insertMedia(tx as never, img, {
+        usage: "gallery", altText: ph.alt, caption: ph.caption, category: ph.cat, isPublished: true,
+        provenance: OWNER_PROVENANCE, isExample: false, sortOrder: order++,
+      });
+      await tx`UPDATE media_assets SET is_featured = ${ph.featured}, focal_x = ${ph.focal[0]}, focal_y = ${ph.focal[1]} WHERE id = ${id}`;
+      for (const slot of ph.slots ?? []) {
+        // Take over a slot only if it is empty or still showing example artwork.
+        await tx`
+          INSERT INTO site_images (slot, media_id) VALUES (${slot}, ${id})
+          ON CONFLICT (slot) DO UPDATE SET media_id = EXCLUDED.media_id
+          WHERE site_images.media_id IS NULL
+             OR site_images.media_id IN (SELECT m.id FROM media_assets m WHERE m.is_example)`;
+      }
+    }
+    // Real work replaces placeholder artwork in the gallery.
+    await tx`UPDATE media_assets SET is_published = false WHERE usage = 'gallery' AND is_example`;
+  });
+
   await unit("media-placeholders", async (tx) => {
     // Rendered still lifes: glossy almond nails on draped satin (some leopard-printed).
     const leopardLight = await rasterTile(leopardSvg({ ground: "#d9c2a8", ink: "#2e211b", centre: "#b08d72", seed: 31, size: 640 }), 640, 1.4);
@@ -172,8 +225,9 @@ async function main() {
       { cat: "nail-art", alt: "Placeholder artwork: muted rose nails with a fine dark line on leopard silk", caption: "Muted rose", tall: true,
         scene: { fabric: "#d6bfa6", sheen: "#fff1e2", foldFrequency: 0.65, print: { ...leopardLight, scale: 1.6, strength: 0.8 }, swatches: cascade({ color: "#b98a80", accent: "#2b211d" }) } },
     ];
+    const [{ real }] = await tx`SELECT count(*)::int AS real FROM media_assets WHERE usage = 'gallery' AND NOT is_example`;
     let order = 0;
-    for (const [i, g] of gallery.entries()) {
+    for (const [i, g] of (real > 0 ? [] : gallery).entries()) {
       const [w, h] = g.tall ? [1280, 1600] : [1400, 1400];
       const img = await processImage(await render(w, h, 100 + i, g.scene), "gallery");
       const id = await insertMedia(tx as never, img, {

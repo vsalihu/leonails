@@ -88,7 +88,8 @@ These are business decisions and content, not code:
 - [ ] Real treatments, prices, durations and extras; archive the examples (Admin > Treatments)
 - [ ] Real weekly hours and any holidays (Admin > Settings > Working hours, Admin > Calendar)
 - [ ] The real private address and arrival instructions (Admin > Settings > Private address)
-- [ ] Replace placeholder artwork with Rugile's photos, or remove it (Admin > Gallery, including Website images)
+- [x] Rugile's own photos in the gallery and website slots (six supplied in October 2026, stored in `content/gallery`, metadata removed). Add more over time in Admin > Gallery.
+- [ ] Confirm each client in the gallery photos is happy for their hands to be published
 - [ ] Delete the three example reviews (Admin > Reviews)
 - [ ] Website copy for the homepage, About and Treatments (Admin > Settings > Website copy)
 - [ ] Confirm payment methods, cancellation rules, booking terms and privacy notice with Rugile, then publish them (Admin > Settings > Policies)

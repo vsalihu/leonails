@@ -52,7 +52,7 @@ export function GalleryGrid({ items, categories }: { items: GalleryEntry[]; cate
       {visible.length === 0 ? (
         <p className="mt-12 text-taupe">No images in this style yet.</p>
       ) : (
-        <ul className="mt-10 columns-2 gap-3 md:columns-3 md:gap-4 xl:columns-4">
+        <ul className="mt-10 columns-2 gap-3 md:columns-3 md:gap-4">
           {visible.map((m, i) => (
             <li key={m.id} className="mb-3 break-inside-avoid md:mb-4">
               <button

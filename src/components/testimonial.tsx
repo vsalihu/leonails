@@ -13,13 +13,13 @@ export function ExampleTag({ className = "" }: { className?: string }) {
 export function TestimonialFigure({ t, size }: { t: PublicTestimonial; size: "lead" | "small" | "card" }) {
   const lead = size === "lead";
   return (
-    <figure className={lead ? "grid gap-8 sm:grid-cols-[minmax(0,180px)_1fr] sm:items-start" : "grid grid-cols-[72px_1fr] gap-5"}>
+    <figure className={lead ? `grid gap-8 ${t.media ? "sm:grid-cols-[minmax(0,180px)_1fr] sm:items-start" : ""}` : "grid grid-cols-[72px_1fr] gap-5"}>
       {t.media ? (
         <div className={`relative overflow-hidden bg-night-2 ${lead ? "aspect-[4/5] w-full max-w-[180px]" : "aspect-square w-[72px]"}`}>
           <MediaImage media={t.media} sizes={lead ? "180px" : "72px"} />
         </div>
       ) : (
-        <div aria-hidden className={lead ? "hidden sm:block" : "leopard-dark aspect-square w-[72px]"} />
+        !lead && <div aria-hidden className="leopard-dark aspect-square w-[72px]" />
       )}
       <div>
         {t.rating && (

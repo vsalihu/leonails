@@ -115,7 +115,7 @@ export default async function HomePage() {
                 1: ["col-span-2 aspect-[16/9] md:col-span-12 md:aspect-[21/9]"],
                 2: ["col-span-2 aspect-[4/5] md:col-span-7 md:aspect-[4/3]", "col-span-2 aspect-[4/5] md:col-span-5 md:aspect-auto"],
                 3: ["col-span-2 aspect-[4/5] md:col-span-5 md:row-span-2 md:aspect-auto", "aspect-square md:col-span-7 md:aspect-[16/9]", "aspect-square md:col-span-7 md:aspect-[16/9]"],
-                4: ["col-span-2 aspect-[4/5] md:col-span-5 md:row-span-2 md:aspect-auto", "aspect-square md:col-span-4 md:aspect-[4/3]", "aspect-square md:col-span-3 md:aspect-[3/4]", "col-span-2 aspect-[16/9] md:col-span-7 md:aspect-[21/9]"],
+                4: ["col-span-2 aspect-[4/5] md:col-span-5 md:row-span-2 md:aspect-auto", "aspect-square md:col-span-4 md:aspect-[4/3]", "aspect-square md:col-span-3 md:aspect-[3/4]", "col-span-2 aspect-[16/10] md:col-span-7 md:aspect-[2/1]"],
               };
               const layout = layouts[gallery.length][i];
               return (
