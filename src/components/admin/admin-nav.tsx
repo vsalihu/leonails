@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 export const ADMIN_NAV = [
   { href: "/admin", label: "Today" },
@@ -19,9 +20,20 @@ export const ADMIN_NAV = [
 export function AdminNav({ variant, badges = {} }: { variant: "side" | "top"; badges?: Record<string, number> }) {
   const pathname = usePathname();
   const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
+  const scroller = useRef<HTMLElement>(null);
+
+  // Phones: bring the current section's tab into view (the row scrolls sideways).
+  useEffect(() => {
+    const nav = scroller.current;
+    const current = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !current) return;
+    const offset = current.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+    nav.scrollLeft += offset - (nav.clientWidth - current.offsetWidth) / 2;
+  }, [pathname]);
+
   if (variant === "top") {
     return (
-      <nav aria-label="Admin" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none]">
+      <nav ref={scroller} aria-label="Admin" className="admin-tabs -mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <ul className="flex gap-1 pb-1">
           {ADMIN_NAV.map((n) => (
             <li key={n.href}>

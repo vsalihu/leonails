@@ -259,6 +259,25 @@ body {
     font-size: 1rem; /* 16px avoids iOS zoom */
     transition: border-color 150ms, box-shadow 150ms;
   }
+  /* iOS Safari gives date and time fields an intrinsic minimum width and ignores
+     width: 100%, so they overflow narrow screens; drop the native chrome sizing. */
+  .input[type="date"],
+  .input[type="time"],
+  .input[type="datetime-local"] {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: 1.5;
+  }
+  .input::-webkit-date-and-time-value {
+    min-height: 1.5em;
+    text-align: left;
+  }
+  .input::-webkit-datetime-edit {
+    padding: 0;
+  }
   .input::placeholder {
     color: #85746a;
   }
@@ -745,4 +764,10 @@ body::after {
 }
 .site-menu-link:hover .site-menu-word {
   transform: translateX(0.35rem);
+}
+
+/* Admin tab row on phones: fade the edges so it reads as a sideways scroller. */
+.admin-tabs {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 2.5rem), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 2.5rem), transparent 100%);
 }
