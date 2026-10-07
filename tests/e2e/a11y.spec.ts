@@ -21,11 +21,11 @@ test("reduced motion: content is visible immediately and parallax is static", as
     Array.from(document.querySelectorAll("[data-reveal]")).filter((el) => getComputedStyle(el).opacity !== "1").length,
   );
   expect(hidden).toBe(0);
-  const before = await page.locator(".hero-image img").boundingBox();
+  const before = await page.locator(".hero-image img, .hero-film video").first().boundingBox();
   await page.mouse.wheel(0, 400);
   await page.waitForTimeout(300);
   await page.evaluate(() => window.scrollTo(0, 0));
-  const after = await page.locator(".hero-image img").boundingBox();
+  const after = await page.locator(".hero-image img, .hero-film video").first().boundingBox();
   expect(Math.abs((after?.y ?? 0) - (before?.y ?? 0))).toBeLessThan(1);
   await context.close();
 });

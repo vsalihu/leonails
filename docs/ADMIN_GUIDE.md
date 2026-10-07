@@ -77,7 +77,12 @@ Only one offer applies per booking: the client gets whichever saves them most. T
 
 **Website images** (top of the gallery page) are the fixed pictures on the homepage and About page. Use *Use on website as* to place them.
 
-**Homepage video.** Under Website images you can upload a short MP4 or WebM video (up to 40 MB; about 8 to 10 seconds at 1080p, exported for web, works best). Add a description, choose *Use on website as: Homepage hero video* and tick Published. It plays silently on a loop beside the headline, with a pause button. The homepage hero *image* is used as its first frame and for visitors who have turned off motion on their device, so keep a good hero image set too. To go back to the still image, choose *Stop using as homepage hero video*.
+**Homepage film.** The homepage opens with a full-screen film behind the headline. Under Website images you can upload a short MP4 or WebM (up to 40 MB; 10 to 15 seconds, exported for web, works best). Add a description, choose where it goes in *Use on website as*, and tick Published:
+
+* *Homepage hero video (computers, landscape)*: a 16:9 film. Keep the left third dark and calm, because the headline sits there.
+* *Homepage hero video (phones, portrait)*: optional, 9:16. Keep the bottom third calm, because the headline sits there on phones. Without it, phones show the landscape film in a band above the headline.
+
+It plays silently on a loop with a pause button. Visitors who have turned off motion on their device see a still frame from the film instead. To go back to the photograph layout, choose *Stop using on the homepage* on each film.
 
 ## Reviews
 

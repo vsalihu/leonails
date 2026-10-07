@@ -2,18 +2,19 @@ import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { MediaImage } from "@/components/media-image";
 import { HeroMedia } from "@/components/hero-media";
+import { HeroFilm } from "@/components/hero-film";
 import { TestimonialFigure } from "@/components/testimonial";
-import { getContent, galleryItems, heroVideoSource, openingHours, publicSettings, siteImages, testimonials } from "@/lib/server/public-content";
+import { getContent, galleryItems, heroVideos, openingHours, publicSettings, siteImages, testimonials } from "@/lib/server/public-content";
 import { listTreatments } from "@/lib/server/catalogue";
 import { publicPromotion } from "@/lib/server/promotions";
 import { formatDuration, formatPence } from "@/lib/money";
 
 export default async function HomePage() {
-  const [s, content, images, heroVideo, treatments, gallery, reviews, promo, hours] = await Promise.all([
+  const [s, content, images, film, treatments, gallery, reviews, promo, hours] = await Promise.all([
     publicSettings(),
     getContent(["home.hero", "home.intro", "home.visit"]),
     siteImages(["home.hero", "home.intro"]),
-    heroVideoSource(),
+    heroVideos(),
     listTreatments(),
     galleryItems({ limit: 4 }), // featured first, then most recent
     testimonials({ featuredOnly: true, limit: 3 }),
@@ -27,31 +28,63 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero: copy left; photograph or video bleeds to the right edge, joined by a leopard seam. */}
-      <section className="relative grid lg:min-h-[calc(100dvh-4.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-        <div className="hero-copy flex flex-col justify-center px-4 pb-14 pt-12 md:px-8 lg:py-20 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))] lg:pr-16">
-          <p className="eyebrow text-champagne-text">{s.publicLocation}, by appointment</p>
-          <h1 className="display mt-7 text-[3rem] leading-[1.02] xs:text-[3.4rem] md:text-[4.4rem] lg:text-[3.9rem] lg:[&>*]:whitespace-nowrap xl:text-[4.9rem] 2xl:text-[5.6rem]">
-            <span className="block">{headline.roman}</span>
-            {headline.italic && (
-              <>
-                <span className="display-italic block">{headline.italic}</span>
-              </>
-            )}
-          </h1>
-          <p className="mt-8 max-w-md text-lg leading-relaxed text-taupe">{hero.body}</p>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link href="/book" className="btn btn-primary">Book an appointment</Link>
-            <Link href="/treatments" className="btn btn-outline">View treatments</Link>
+      {film.desktop || film.mobile ? (
+        /* Hero film: full-bleed, headline set over the dark field of the frame. */
+        <section className={`hero-film on-night relative isolate overflow-hidden bg-night text-ivory ${film.mobile ? "hero-film--portrait" : ""}`}>
+          <div className="hero-film-stage relative lg:h-[calc(100svh-4.75rem)] lg:min-h-[620px] lg:max-h-[1080px]">
+            <div className="hero-film-media">
+              <HeroFilm desktop={film.desktop} mobile={film.mobile} label={`Video: ${(film.desktop ?? film.mobile)!.alt || "a manicure in close-up"}`} />
+              <div className="hero-film-shade pointer-events-none absolute inset-0" aria-hidden />
+            </div>
+            <div className="hero-film-copy">
+              <div className="hero-copy w-full px-4 md:px-8 xl:px-12 2xl:px-16">
+                <p className="eyebrow flex items-center gap-4 text-champagne-light">
+                  <span className="h-px w-10 bg-champagne-light/70" aria-hidden />
+                  {s.publicLocation}, by appointment
+                </p>
+                <h1 className="display mt-6 text-[2.9rem] leading-[1.02] text-ivory xs:text-[3.3rem] md:text-[4.4rem] lg:text-[3.3rem] lg:[&>*]:whitespace-nowrap xl:text-[3.7rem] min-[1400px]:text-[4.2rem] 2xl:text-[5rem]">
+                  <span className="block">{headline.roman}</span>
+                  {headline.italic && <span className="display-italic block text-champagne-light">{headline.italic}</span>}
+                </h1>
+                <p className="hero-film-lede mt-7 max-w-[22rem] text-[1.05rem] leading-relaxed text-ivory/80">{hero.body}</p>
+                <div className="mt-9 flex flex-wrap gap-3">
+                  <Link href="/book" className="btn btn-light">Book an appointment</Link>
+                  <Link href="/treatments" className="btn btn-ghost-light">View treatments</Link>
+                </div>
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] hidden lg:block" aria-hidden>
+              <div className="flex items-center gap-4 px-8 pb-10 text-[0.68rem] xl:px-12 2xl:px-16 font-medium uppercase tracking-[0.24em] text-ivory/60">
+                <span className="hero-scroll-cue relative block h-10 w-px overflow-hidden bg-ivory/20" />
+                Scroll
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="hero-image relative grid grid-cols-[10px_1fr] md:grid-cols-[16px_1fr]">
-          <div className="leopard-light" aria-hidden />
-          <div className="relative aspect-[4/5] lg:aspect-auto">
-            <HeroMedia image={images["home.hero"]} video={heroVideo} sizes="(min-width: 1024px) 46vw, 100vw" />
+          <div className="leopard-dark h-2" aria-hidden />
+        </section>
+      ) : (
+        /* Hero without film: copy left; photograph bleeds to the right edge, joined by a leopard seam. */
+        <section className="relative grid lg:min-h-[calc(100dvh-4.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+          <div className="hero-copy flex flex-col justify-center px-4 pb-14 pt-12 md:px-8 lg:py-20 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))] lg:pr-16">
+            <p className="eyebrow text-champagne-text">{s.publicLocation}, by appointment</p>
+            <h1 className="display mt-7 text-[3rem] leading-[1.02] xs:text-[3.4rem] md:text-[4.4rem] lg:text-[3.9rem] lg:[&>*]:whitespace-nowrap xl:text-[4.9rem] 2xl:text-[5.6rem]">
+              <span className="block">{headline.roman}</span>
+              {headline.italic && <span className="display-italic block">{headline.italic}</span>}
+            </h1>
+            <p className="mt-8 max-w-md text-lg leading-relaxed text-taupe">{hero.body}</p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link href="/book" className="btn btn-primary">Book an appointment</Link>
+              <Link href="/treatments" className="btn btn-outline">View treatments</Link>
+            </div>
           </div>
-        </div>
-      </section>
+          <div className="hero-image relative grid grid-cols-[10px_1fr] md:grid-cols-[16px_1fr]">
+            <div className="leopard-light" aria-hidden />
+            <div className="relative aspect-[4/5] lg:aspect-auto">
+              <HeroMedia image={images["home.hero"]} sizes="(min-width: 1024px) 46vw, 100vw" />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Introduction: editorial text with an inset image */}
       <section className="border-t hairline bg-paper">

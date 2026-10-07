@@ -21,6 +21,7 @@
   --color-nude: #c7a997;
   --color-champagne: #a88958;
   --color-champagne-text: #7a5f35;
+  --color-champagne-light: #d6bd8f; /* champagne for text on night */
   --color-taupe: #6b5a4e;
   --color-line: #d9cbba;
   --color-line-strong: #8f7c6d;
@@ -415,4 +416,105 @@ body::after {
 
 .masthead::before {
   content: attr(data-word);
+}
+
+/* Hero film ------------------------------------------------------------------
+   Desktop: film fills the hero, headline set over the dark left of the frame.
+   Phones without a portrait film: the landscape film sits in a 16:9 band and
+   the copy follows on the dark ground. With a portrait film (.hero-film--portrait)
+   phones get the full-bleed treatment too, copy anchored to the bottom. */
+.hero-film-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+.hero-film-copy {
+  position: relative;
+  z-index: 1;
+  padding-block: 2.5rem 3.5rem;
+}
+.hero-film-shade {
+  /* band: melt the bottom of the frame into the copy below */
+  background: linear-gradient(0deg, var(--color-night) 0%, rgb(25 21 18 / 0) 38%);
+}
+.hero-film--portrait .hero-film-stage {
+  height: calc(100svh - 4rem);
+  min-height: 560px;
+}
+.hero-film--portrait .hero-film-media {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+}
+.hero-film--portrait .hero-film-copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-block: 0 5.5rem;
+}
+.hero-film--portrait .hero-film-shade {
+  background:
+    linear-gradient(0deg, rgb(25 21 18 / 0.92) 0%, rgb(25 21 18 / 0.55) 38%, rgb(25 21 18 / 0) 62%),
+    linear-gradient(180deg, rgb(25 21 18 / 0.35) 0%, rgb(25 21 18 / 0) 18%);
+}
+@media (min-width: 1024px) {
+  .hero-film .hero-film-stage {
+    height: calc(100svh - 4.75rem);
+  }
+  .hero-film .hero-film-media {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+  }
+  .hero-film .hero-film-copy {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 0 4rem;
+  }
+  .hero-film .hero-film-shade {
+    /* a soft vignette: dark field behind the headline, the subject left clear */
+    background:
+      linear-gradient(90deg, rgb(25 21 18 / 0.72) 0%, rgb(25 21 18 / 0.42) 24%, rgb(25 21 18 / 0) 44%),
+      linear-gradient(0deg, rgb(25 21 18 / 0.55) 0%, rgb(25 21 18 / 0) 26%),
+      radial-gradient(120% 90% at 60% 55%, rgb(25 21 18 / 0) 55%, rgb(25 21 18 / 0.45) 100%);
+  }
+}
+/* The film fades (and, with motion allowed, settles) in from the dark ground once frames are ready. */
+.hero-film-video {
+  opacity: 0;
+  transition:
+    opacity 1600ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hero-film-video[data-ready] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-film-video:not([data-ready]) {
+    transform: scale(1.04);
+  }
+}
+.hero-film-lede {
+  text-shadow: 0 1px 18px rgb(25 21 18 / 0.6);
+}
+.hero-scroll-cue::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 40%;
+  background: var(--color-ivory);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-scroll-cue::after {
+    animation: scroll-cue 2.4s var(--ease-out-soft) infinite;
+  }
+}
+@keyframes scroll-cue {
+  0% { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(260%); }
 }

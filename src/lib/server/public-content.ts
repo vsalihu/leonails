@@ -34,13 +34,22 @@ export async function siteImages(slots: string[]): Promise<Record<string, Media 
   return out;
 }
 
-/** Optional looping hero video (slot "home.hero.video"). */
-export async function heroVideoSource(): Promise<{ src: string; type: string } | null> {
-  const [r] = await sql()`
-    SELECT m.storage_key, m.mime FROM site_images si JOIN media_assets m ON m.id = si.media_id
-    WHERE si.slot = 'home.hero.video' AND m.is_published AND m.kind = 'video'`;
-  if (!r) return null;
-  return { src: `/media/${r.storage_key}/video.${r.mime === "video/webm" ? "webm" : "mp4"}`, type: r.mime };
+export type HeroVideoSource = { src: string; type: string; alt: string };
+
+/**
+ * Optional looping hero videos: "home.hero.video" (landscape, desktop) and
+ * "home.hero.video.mobile" (portrait, phones and tablets). Either works alone.
+ */
+export async function heroVideos(): Promise<{ desktop: HeroVideoSource | null; mobile: HeroVideoSource | null }> {
+  const rows = await sql()`
+    SELECT si.slot, m.storage_key, m.mime, m.alt_text FROM site_images si JOIN media_assets m ON m.id = si.media_id
+    WHERE si.slot IN ('home.hero.video', 'home.hero.video.mobile') AND m.is_published AND m.kind = 'video'`;
+  const toSource = (r: (typeof rows)[number] | undefined): HeroVideoSource | null =>
+    r ? { src: `/media/${r.storage_key}/video.${r.mime === "video/webm" ? "webm" : "mp4"}`, type: r.mime, alt: r.alt_text } : null;
+  return {
+    desktop: toSource(rows.find((r) => r.slot === "home.hero.video")),
+    mobile: toSource(rows.find((r) => r.slot === "home.hero.video.mobile")),
+  };
 }
 
 export type GalleryItem = Media & { category: string | null; isFeatured: boolean; treatment: { slug: string; name: string } | null };

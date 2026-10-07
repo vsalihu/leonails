@@ -8,7 +8,7 @@ import { deleteMedia } from "@/lib/server/images";
 import { audit } from "@/lib/server/audit";
 
 const IMAGE_SLOTS = ["home.hero", "home.intro", "about.portrait", "visit.studio"];
-const VIDEO_SLOTS = ["home.hero.video"];
+const VIDEO_SLOTS = ["home.hero.video", "home.hero.video.mobile"];
 
 export async function saveMediaAction(_: ActionState, form: FormData): Promise<ActionState> {
   const admin = await requireAdmin();
@@ -26,8 +26,8 @@ export async function saveMediaAction(_: ActionState, form: FormData): Promise<A
       focal_x = ${Number.isFinite(fx) ? fx : 50}, focal_y = ${Number.isFinite(fy) ? fy : 50}, is_example = false
     WHERE id = ${id}`;
   const slot = fd.opt(form, "slot");
-  if (slot === "none:home.hero.video") {
-    await sql()`DELETE FROM site_images WHERE slot = 'home.hero.video' AND media_id = ${id}`;
+  if (slot === "none") {
+    await sql()`DELETE FROM site_images WHERE slot = ANY(${VIDEO_SLOTS}) AND media_id = ${id}`;
   } else if (slot && (m.kind === "video" ? VIDEO_SLOTS : IMAGE_SLOTS).includes(slot)) {
     await sql()`INSERT INTO site_images (slot, media_id) VALUES (${slot}, ${id}) ON CONFLICT (slot) DO UPDATE SET media_id = EXCLUDED.media_id`;
   }

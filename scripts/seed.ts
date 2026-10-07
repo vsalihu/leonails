@@ -18,7 +18,7 @@ function luminance(hex: string) {
   const n = parseInt(hex.slice(1), 16);
   return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
 }
-import { processImage, insertMedia } from "../src/lib/server/images";
+import { processImage, insertMedia, storeVideo } from "../src/lib/server/images";
 
 const url = process.env.DATABASE_URL;
 if (!url) throw new Error("DATABASE_URL is not set");
@@ -190,6 +190,30 @@ async function main() {
     // Real work replaces placeholder artwork in the gallery.
     await tx`UPDATE media_assets SET is_published = false WHERE usage = 'gallery' AND is_example`;
   });
+
+  // Homepage hero film (content/hero). Landscape for computers; an optional
+  // portrait cut for phones. Never replaces a film already chosen in the admin.
+  // Homepage hero films (content/hero): landscape for computers, an optional
+  // portrait cut for phones. Each file is added once, when it first appears,
+  // and never replaces a film already chosen in the admin.
+  for (const f of [
+    { file: "hero-desktop.mp4", slot: "home.hero.video" },
+    { file: "hero-mobile.mp4", slot: "home.hero.video.mobile" },
+  ]) {
+    const file = path.join(process.cwd(), "content", "hero", f.file);
+    if (!existsSync(file)) continue;
+    await unit(`owner-hero-film:${f.file}`, async (tx) => {
+      const [taken] = await tx`SELECT 1 FROM site_images WHERE slot = ${f.slot} AND media_id IS NOT NULL`;
+      if (taken) return;
+      const body = readFileSync(file);
+      const v = await storeVideo(body);
+      const [r] = await tx`
+        INSERT INTO media_assets (storage_key, width, height, variants, alt_text, usage, is_published, provenance, kind, mime, byte_size)
+        VALUES (${v.storageKey}, 0, 0, ${[]}, 'A drop of glossy oxblood gel polish falls from a gold brush onto a leopard''s head',
+                'site', true, 'AI-generated film made for the site', 'video', ${v.mime}, ${body.length}) RETURNING id`;
+      await tx`INSERT INTO site_images (slot, media_id) VALUES (${f.slot}, ${r.id}) ON CONFLICT (slot) DO UPDATE SET media_id = EXCLUDED.media_id`;
+    });
+  }
 
   await unit("media-placeholders", async (tx) => {
     // Rendered still lifes: glossy almond nails on draped satin (some leopard-printed).

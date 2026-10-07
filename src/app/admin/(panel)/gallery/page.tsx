@@ -11,7 +11,10 @@ import { deleteMediaAction, moveMediaAction, saveMediaAction } from "./actions";
 export const metadata: Metadata = { title: "Gallery" };
 
 const SLOT_LABELS: Record<string, string> = { "home.hero": "Homepage hero", "home.intro": "Homepage introduction", "about.portrait": "About page portrait", "visit.studio": "Studio photo" };
-const VIDEO_SLOT_LABELS: Record<string, string> = { "home.hero.video": "Homepage hero video" };
+const VIDEO_SLOT_LABELS: Record<string, string> = {
+  "home.hero.video": "Homepage hero video (computers, landscape)",
+  "home.hero.video.mobile": "Homepage hero video (phones, portrait)",
+};
 
 export default async function GalleryAdmin({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   const { show } = await searchParams;
@@ -49,7 +52,7 @@ export default async function GalleryAdmin({ searchParams }: { searchParams: Pro
                   {isVideo ? (
                     <div>
                       <video src={`/media/${m.storage_key}/video.${m.mime === "video/webm" ? "webm" : "mp4"}`} controls muted playsInline preload="metadata" className="w-full bg-night" />
-                      <p className="mt-1 text-xs text-taupe">{m.mime}, {(m.byte_size / 1024 / 1024).toFixed(1)} MB. Plays muted on a loop; visitors who prefer reduced motion see the homepage hero image instead.</p>
+                      <p className="mt-1 text-xs text-taupe">{m.mime}, {(m.byte_size / 1024 / 1024).toFixed(1)} MB. Plays muted on a loop behind the homepage headline; visitors who prefer reduced motion see a still frame. Computers: landscape 16:9. Phones: portrait 9:16 (optional; without it, phones show the landscape video in a band).</p>
                     </div>
                   ) : (
                     <FocalPicker src={mediaUrl({ key: m.storage_key }, bestVariant({ variants: m.variants }, 480))} x={m.focal_x} y={m.focal_y} alt={m.alt_text || "Uploaded image"} />
@@ -71,7 +74,7 @@ export default async function GalleryAdmin({ searchParams }: { searchParams: Pro
                       <select name="slot" defaultValue="" className="input">
                         <option value="">No change</option>
                         {Object.entries(isVideo ? VIDEO_SLOT_LABELS : SLOT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                        {isVideo && usedIn.length > 0 && <option value="none:home.hero.video">Stop using as homepage hero video</option>}
+                        {isVideo && usedIn.length > 0 && <option value="none">Stop using on the homepage</option>}
                       </select>
                     </AField>
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="published" defaultChecked={m.is_published} className="accent-[var(--color-ink)]" /> Published</label>
