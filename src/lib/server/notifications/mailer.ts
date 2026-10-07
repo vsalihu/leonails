@@ -1,4 +1,5 @@
 import "server-only";
+import { getSettings } from "../settings";
 import nodemailer, { type Transporter } from "nodemailer";
 import { env, mailConfigured } from "../env";
 import { sql } from "../db";
@@ -48,8 +49,12 @@ export async function deliver(msg: OutgoingMessage, jobId: number): Promise<Send
   if (mode === "smtp-misconfigured") {
     throw new Error("MAIL_DRIVER=smtp but SMTP_HOST or MAIL_FROM is not set");
   }
+  // Replies go to the studio's public contact email (Admin > Settings > Business),
+  // so the sending mailbox can be anyone's (e.g. a personal Gmail used while testing).
+  const replyTo = (await getSettings()).contactEmail;
   const info = await smtp().sendMail({
     from: env().MAIL_FROM,
+    ...(replyTo ? { replyTo } : {}),
     to: msg.to,
     subject: msg.subject,
     text: msg.text,

@@ -80,6 +80,8 @@ Notes:
 * `${{Postgres.DATABASE_URL}}` and `${{RAILWAY_PUBLIC_DOMAIN}}` are filled in by Railway; type them exactly. If your database service has a different name than `Postgres`, use that name.
 * **Don't** set `NODE_ENV`. Railway would apply it to the build too and skip the build tools.
 * `MAIL_FROM` must use the same Gmail address as `SMTP_USER`.
+* Any Gmail account works, even a personal one: customers see the name in `MAIL_FROM` (e.g. "Rugile Nail Atelier"), and when they reply, the reply goes to the public contact email in **Admin → Settings → Business** if one is set.
+* Outlook/Hotmail addresses can't be used here: Microsoft no longer allows websites to send with a password.
 
 Click **Deploy** (Railway also redeploys automatically when variables change).
 
