@@ -27,6 +27,15 @@ export async function migrate(databaseUrl: string, log = console.log) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
   const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
+  if (!url) {
+    console.error(
+      "\nDATABASE_URL is not set for this service, so the app can't reach its database.\n" +
+        "On Railway: open the app service (not the Postgres one) > Variables > New Variable >\n" +
+        "Add Reference > choose your PostgreSQL service > DATABASE_URL, then deploy the change.\n" +
+        "Or add it by hand as DATABASE_URL=${{Postgres.DATABASE_URL}}, where 'Postgres' is the\n" +
+        "database service's exact name on the project canvas.\n",
+    );
+    process.exit(1);
+  }
   migrate(url).then(() => console.log("migrations up to date"), (e) => { console.error(e); process.exit(1); });
 }

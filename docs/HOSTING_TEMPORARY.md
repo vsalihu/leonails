@@ -121,6 +121,7 @@ The **Before launch** panel on Admin → Today lists the example content still t
 | Symptom | Fix |
 | --- | --- |
 | Deploy log: `Invalid environment configuration` | A required variable is missing or malformed. The message names it (`APP_SECRET` must be 32+ characters; `APP_URL` must start with `https://`). |
+| Deploy log: `DATABASE_URL is not set`, container keeps restarting | The variable isn't on the **app** service. Open the leonails service (not Postgres) → **Variables → New Variable → Add Reference →** your PostgreSQL service → `DATABASE_URL`. If you typed `${{Postgres.DATABASE_URL}}`, `Postgres` must match the database service's name exactly. Then press **Deploy** on the staged changes banner. |
 | `ECONNREFUSED` / database errors | `DATABASE_URL` must be `${{Postgres.DATABASE_URL}}` (match your database service's name). |
 | Can't sign in to admin | Check `ADMIN_EMAIL`/`ADMIN_PASSWORD` were set **before** the first successful start, and the password is 12+ characters. Otherwise use **Forgotten your password?** (needs email working). |
 | Emails show **Failed** | Wrong `SMTP_PASSWORD` (must be an *app password*, no spaces) or `MAIL_FROM` doesn't match `SMTP_USER`. Fix the variable, then press **Retry** in Admin → Messages. |
