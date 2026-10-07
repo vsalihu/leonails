@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { db } from "./db";
 
+const ORIGIN = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").origin;
+
 const EMAIL = process.env.E2E_ADMIN_EMAIL ?? "rugile@example.test";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "dev-password-1234";
 
@@ -15,13 +17,13 @@ test("admin uploads a hero video; homepage plays it with a pause control; ranges
 
   // invalid "video" is rejected by signature
   const bad = await page.request.post("/api/admin/media", {
-    headers: { origin: "http://localhost:3000" },
+    headers: { origin: ORIGIN },
     multipart: { usage: "site", file: { name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.from("definitely not a video") } },
   });
   expect(bad.status()).toBe(422);
 
   const res = await page.request.post("/api/admin/media", {
-    headers: { origin: "http://localhost:3000" },
+    headers: { origin: ORIGIN },
     multipart: { usage: "site", file: { name: "hero.mp4", mimeType: "video/mp4", buffer: readFileSync("tests/e2e/fixtures/hero-test.mp4") } },
   });
   expect(res.status()).toBe(200);

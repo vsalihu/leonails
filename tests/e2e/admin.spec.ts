@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { db } from "./db";
 
+const ORIGIN = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").origin;
+
 const EMAIL = process.env.E2E_ADMIN_EMAIL ?? "rugile@example.test";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "dev-password-1234";
 
@@ -14,7 +16,7 @@ test("admin pages require a session", async ({ request }) => {
   // even with a forged cookie, the server rejects it
   const res = await request.get("/admin/settings?tab=address", { headers: { cookie: "admin_session=forged" } });
   expect(await res.text()).not.toContain("PLACEHOLDER ADDRESS");
-  const up = await request.post("/api/admin/media", { headers: { origin: "http://localhost:3000" }, multipart: { file: { name: "a.jpg", mimeType: "image/jpeg", buffer: Buffer.from("x") } } });
+  const up = await request.post("/api/admin/media", { headers: { origin: ORIGIN }, multipart: { file: { name: "a.jpg", mimeType: "image/jpeg", buffer: Buffer.from("x") } } });
   expect(up.status()).toBe(401);
 });
 

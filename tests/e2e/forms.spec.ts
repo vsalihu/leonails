@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { db } from "./db";
 
+const ORIGIN = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").origin;
+
 // Repeated runs from one machine would otherwise hit the real per-IP limits.
 test.beforeEach(async () => {
   await db`DELETE FROM rate_limits WHERE bucket LIKE 'review:%' OR bucket LIKE 'contact%'`;
@@ -32,7 +34,7 @@ test("review link: invalid upload is rejected, valid review is stored as pending
   await db`INSERT INTO booking_access_tokens (token_hash, booking_id, purpose, expires_at) VALUES (${createHash("sha256").update(token).digest()}, ${b.id}, 'review', now() + interval '1 day')`;
 
   const bad = await request.post(`/api/review/${token}`, {
-    headers: { origin: "http://localhost:3000" },
+    headers: { origin: ORIGIN },
     multipart: { displayName: "Mira", quote: "Lovely appointment and great shape", consent: "yes", photo: { name: "nails.jpg", mimeType: "image/jpeg", buffer: Buffer.from("not really an image") } },
   });
   expect(bad.status()).toBe(422);
@@ -45,7 +47,7 @@ test("review link: invalid upload is rejected, valid review is stored as pending
   await expect(page.getByText("Thank you for your review.")).toBeVisible();
   const [r] = await db`SELECT status, source FROM testimonials WHERE booking_id = ${b.id}`;
   expect(r).toMatchObject({ status: "pending", source: "customer" });
-  const again = await request.post(`/api/review/${token}`, { headers: { origin: "http://localhost:3000" }, multipart: { displayName: "Mira", quote: "Trying to post a second time", consent: "yes" } });
+  const again = await request.post(`/api/review/${token}`, { headers: { origin: ORIGIN }, multipart: { displayName: "Mira", quote: "Trying to post a second time", consent: "yes" } });
   expect(again.status()).toBe(409);
   const pub = await request.get("/reviews");
   expect(await pub.text()).not.toContain("great shape, thank you");
@@ -60,7 +62,7 @@ test("confirming without a valid hold creates nothing", async ({ request }) => {
   // Requires a real hold; the confirm endpoint still validates the hold first, so any
   // unknown hold returns a safe error and never creates a booking.
   const res = await request.post("/api/booking/confirm", {
-    headers: { origin: "http://localhost:3000" },
+    headers: { origin: ORIGIN },
     data: { holdId: "00000000-0000-4000-8000-000000000000", idempotencyKey: "00000000-0000-4000-8000-000000000001", name: "X Y", email: "x@example.test", phone: "07700900123", expectedTotalPence: 1, acceptedTerms: true },
   });
   expect([404, 410]).toContain(res.status());

@@ -59,7 +59,7 @@ export async function login(email: string, password: string, userAgent: string |
   await sql()`DELETE FROM admin_sessions WHERE expires_at < now()`;
   (await cookies()).set(ADMIN_COOKIE, token, {
     httpOnly: true,
-    secure: env().NODE_ENV === "production",
+    secure: env().APP_URL.startsWith("https://"), // Secure cookies whenever the site is served over HTTPS
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_DAYS * 86400,

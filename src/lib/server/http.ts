@@ -41,7 +41,7 @@ export async function checkoutSession(create = true): Promise<string | null> {
   jar.set(SESSION_COOKIE, id, {
     httpOnly: true,
     sameSite: "lax",
-    secure: env().NODE_ENV === "production",
+    secure: env().APP_URL.startsWith("https://"), // Secure cookies whenever the site is served over HTTPS
     path: "/",
     maxAge: 60 * 60 * 24,
   });

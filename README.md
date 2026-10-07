@@ -13,6 +13,7 @@ All business content (name, prices, hours, address, images, reviews, policies) i
 | Document | For |
 | --- | --- |
 | [`docs/ADMIN_GUIDE.md`](docs/ADMIN_GUIDE.md) | Rugile: day-to-day use of the dashboard |
+| [`docs/HOSTING_TEMPORARY.md`](docs/HOSTING_TEMPORARY.md) | Step-by-step: put the full site online on Railway (temporary hosting) |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Hosting, environment, email, storage, backups and restore |
 | [`docs/STATUS.md`](docs/STATUS.md) | Verification results, acceptance scenarios, remaining configuration |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical decisions and data model |
