@@ -80,7 +80,7 @@ Only one offer applies per booking: the client gets whichever saves them most. T
 **Homepage film.** The homepage opens with a full-screen film behind the headline. Under Website images you can upload a short MP4 or WebM (up to 40 MB; 10 to 15 seconds, exported for web, works best). Add a description, choose where it goes in *Use on website as*, and tick Published:
 
 * *Homepage hero video (computers, landscape)*: a 16:9 film. Keep the left third dark and calm, because the headline sits there.
-* *Homepage hero video (phones, portrait)*: optional, 9:16. Keep the bottom third calm, because the headline sits there on phones. Without it, phones show the landscape film in a band above the headline.
+* *Homepage hero video (phones, portrait)*: optional, 9:16. On phones it fills most of the screen and the headline follows below it, so the whole frame can be used. Without it, phones show the landscape film in a band above the headline.
 
 It plays silently on a loop with a pause button. Visitors who have turned off motion on their device see a still frame from the film instead. To go back to the photograph layout, choose *Stop using on the homepage* on each film.
 
