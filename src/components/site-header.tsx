@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { UserCircle } from "@phosphor-icons/react";
 
 const NAV = [
   { href: "/treatments", label: "Treatments", note: "Menu and prices" },
@@ -29,12 +30,15 @@ export function SiteHeader({
   contactEmail,
   instagramHandle,
   filmHero,
+  signedInAs,
 }: {
   businessName: string;
   publicLocation: string;
   contactEmail: string | null;
   instagramHandle: string | null;
   filmHero: boolean;
+  /** First name of the signed-in client, if any. */
+  signedInAs: string | null;
 }) {
   const pathname = usePathname();
   // The menu is open for the path it was opened on, so navigating closes it.
@@ -77,6 +81,8 @@ export function SiteHeader({
     );
     siblings.forEach((el) => el.setAttribute("inert", ""));
     document.documentElement.style.overflow = "hidden";
+    // The panel's content starts below the header, wherever it sits (a ribbon may be above it).
+    menu?.style.setProperty("--menu-top", `${Math.max(0, header?.getBoundingClientRect().bottom ?? 0)}px`);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpenOn(null);
@@ -100,9 +106,6 @@ export function SiteHeader({
   return (
     <>
       <header ref={headerRef} data-tone={tone} className="site-header sticky top-0 z-[var(--z-nav)]">
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-10 focus:bg-ink focus:px-4 focus:py-2 focus:text-ivory">
-          Skip to content
-        </a>
         <div className="mx-auto grid h-16 max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 md:h-[4.75rem] md:px-8">
           <nav aria-label="Main" className="hidden lg:block">
             <ul className="flex items-center gap-10">
@@ -142,8 +145,18 @@ export function SiteHeader({
                 {NAV.slice(3).map((n) => (
                   <li key={n.href}><NavLink href={n.href} label={n.label} pathname={pathname} /></li>
                 ))}
+                <li className="relative pl-10 before:absolute before:left-0 before:top-1/2 before:h-4 before:w-px before:-translate-y-1/2 before:bg-current before:opacity-25">
+                  <NavLink href="/account" label={signedInAs ? "Account" : "Sign in"} pathname={pathname} />
+                </li>
               </ul>
             </nav>
+            <Link
+              href="/account"
+              className="-mr-2 inline-flex h-11 w-11 items-center justify-center lg:hidden"
+              aria-label={signedInAs ? `Your account (${signedInAs})` : "Sign in"}
+            >
+              <UserCircle size={24} weight="light" aria-hidden />
+            </Link>
             <Link href="/book" className="site-header-book btn btn-sm hidden sm:inline-flex">
               Book an appointment
             </Link>
@@ -159,7 +172,7 @@ export function SiteHeader({
         className="site-menu on-night fixed inset-0 z-[var(--z-menu)] bg-night text-ivory lg:hidden"
       >
         <div className="leopard-dark absolute inset-y-0 left-0 w-1.5" aria-hidden />
-        <div className="flex h-full flex-col overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-7 pr-6 pt-[calc(4rem+1.75rem)] md:pl-10 md:pr-8 md:pt-[calc(4.75rem+2.5rem)]">
+        <div className="flex h-full flex-col overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-7 pr-6 pt-[calc(var(--menu-top,4rem)+1.75rem)] md:pl-10 md:pr-8 md:pt-[calc(var(--menu-top,4.75rem)+2.5rem)]">
           <nav aria-label="Menu" className="flex-1">
             <ol className="site-menu-list">
               {NAV.map((n, i) => {
@@ -194,6 +207,9 @@ export function SiteHeader({
               )}
             </dl>
             <Link href="/book" className="btn btn-light mt-7 w-full">Book an appointment</Link>
+            <Link href="/account" className="mt-3 flex min-h-11 items-center justify-center text-[0.68rem] font-medium uppercase tracking-[0.24em] text-ivory/80 underline-offset-4 hover:underline">
+              {signedInAs ? `Your account · ${signedInAs}` : "Sign in or create an account"}
+            </Link>
           </div>
         </div>
       </div>

@@ -9,7 +9,8 @@ import { mailMode } from "@/lib/server/notifications/mailer";
 import { env } from "@/lib/server/env";
 import { PageHeader, Panel, ExampleFlag } from "@/components/admin/ui";
 import { ActionForm, AField } from "@/components/admin/action-form";
-import { addressAction, businessAction, copyAction, hoursAction, passwordAction, policyAction, rulesAction } from "./actions";
+import { addressAction, businessAction, copyAction, hoursAction, passwordAction, policyAction, ribbonAction, rulesAction } from "./actions";
+import { RIBBON_ROWS } from "@/lib/ribbon";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -19,6 +20,7 @@ const TABS = [
   { id: "hours", label: "Working hours" },
   { id: "address", label: "Private address" },
   { id: "copy", label: "Website copy" },
+  { id: "ribbon", label: "Ribbon" },
   { id: "policies", label: "Policies" },
   { id: "account", label: "Account" },
   { id: "system", label: "System" },
@@ -70,6 +72,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           </ActionForm>
         </Panel>
       )}
+
+      {tab === "ribbon" && (await ribbonPanel())}
 
       {tab === "booking" && (
         <Panel title="Booking rules">
@@ -238,4 +242,38 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       </Panel>
     );
   }
+}
+
+async function ribbonPanel() {
+  const [r] = await sql()`SELECT is_enabled, messages FROM announcement_ribbon WHERE id = 1`;
+  const messages = ((r?.messages ?? []) as { text: string; code: string | null; href: string | null }[]).slice(0, RIBBON_ROWS);
+  const rows = Array.from({ length: RIBBON_ROWS }, (_, i) => messages[i] ?? { text: "", code: null, href: null });
+  return (
+    <Panel title="Announcement ribbon">
+      <p className="mb-5 max-w-2xl text-sm text-taupe">
+        A slim ribbon above the menu on every page of the website. With more than one message they take turns, every few seconds.
+        Add an offer code and visitors can copy it with one tap. Leave a row empty to skip it.
+      </p>
+      <ActionForm action={ribbonAction} className="grid max-w-4xl gap-6">
+        <label className="flex items-center gap-3 text-[0.95rem]">
+          <input type="checkbox" name="enabled" defaultChecked={!!r?.is_enabled} className="h-5 w-5 accent-[var(--color-ink)]" />
+          Show the ribbon on the website
+        </label>
+        {rows.map((m, i) => (
+          <fieldset key={i} className="grid gap-3 border-t border-line pt-5 md:grid-cols-[minmax(0,1.6fr)_minmax(0,0.7fr)_minmax(0,0.9fr)]">
+            <legend className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-taupe">Message {i + 1}</legend>
+            <AField name={`text${i}`} label="Message" help={i === 0 ? "e.g. Autumn appointments are open" : undefined}>
+              <input name={`text${i}`} defaultValue={m.text} maxLength={110} className="input" />
+            </AField>
+            <AField name={`code${i}`} label="Offer code (optional)" help={i === 0 ? "e.g. WELCOME20" : undefined}>
+              <input name={`code${i}`} defaultValue={m.code ?? ""} maxLength={24} className="input uppercase" autoCapitalize="characters" />
+            </AField>
+            <AField name={`href${i}`} label="Link (optional)" help={i === 0 ? "e.g. /book or /treatments" : undefined}>
+              <input name={`href${i}`} defaultValue={m.href ?? ""} className="input" placeholder="/book" />
+            </AField>
+          </fieldset>
+        ))}
+      </ActionForm>
+    </Panel>
+  );
 }

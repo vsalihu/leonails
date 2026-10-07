@@ -108,6 +108,20 @@ export async function render(db: Db, job: JobRow): Promise<Rendered> {
       return { subject: `${code} is your ${settings.businessName} code`, text, html };
     }
 
+    case "customer_login_code": {
+      const loginId = Number(p.loginId);
+      const [l] = await db`SELECT id, expires_at, verified_at, completed_at FROM customer_login_codes WHERE id = ${loginId}`;
+      if (!l || l.verified_at || l.completed_at) return { skip: "sign-in no longer pending" };
+      if (l.expires_at.getTime() < Date.now()) return { skip: "sign-in expired" };
+      const code = newNumericCode();
+      await db`UPDATE customer_login_codes SET code_hash = ${hmac(`login:${loginId}:${code}`)}, attempts = 0 WHERE id = ${loginId}`;
+      const { text, html } = layout(settings, `Your sign-in code is ${code}`, [
+        `Enter this code to sign in to your ${settings.businessName} account. It expires at ${DateTime.fromJSDate(l.expires_at, { zone: settings.timezone }).toFormat("HH:mm")}.`,
+        "If you didn't ask to sign in, you can ignore this email. Nobody can sign in without the code.",
+      ]);
+      return { subject: `${code} is your ${settings.businessName} sign-in code`, text, html };
+    }
+
     case "booking_confirmation":
     case "booking_rescheduled":
     case "booking_reminder": {

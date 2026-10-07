@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { api } from "@/lib/client-api";
+import { Field } from "@/components/field";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CalendarBlank, CaretLeft, CaretRight, Check, Clock, Tag } from "@phosphor-icons/react";
@@ -32,17 +34,6 @@ const STEPS: { id: Step; label: string }[] = [
   { id: "review", label: "Confirm" },
 ];
 
-async function api<T>(url: string, init?: RequestInit): Promise<{ ok: true; data: T } | { ok: false; status: number; error: string; body: Record<string, unknown> }> {
-  try {
-    const res = await fetch(url, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) return { ok: false, status: res.status, error: body.error ?? "Something went wrong. Please try again.", body };
-    return { ok: true, data: body as T };
-  } catch {
-    return { ok: false, status: 0, error: "We couldn't reach the server. Check your connection and try again.", body: {} };
-  }
-}
-
 function uuid() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -54,6 +45,10 @@ export function BookingFlow(props: {
   initialTreatmentSlug: string | null;
   timezone: string;
   holdMinutes: number;
+  /** Signed-in client: details prefilled, no email code needed. */
+  account?: { name: string; email: string; phone: string } | null;
+  /** "Book again": extras to preselect for the initial treatment. */
+  initialExtraIds?: number[];
 }) {
   const { treatments, timezone } = props;
   const router = useRouter();
@@ -61,7 +56,9 @@ export function BookingFlow(props: {
 
   const [step, setStep] = useState<Step>(initial ? "time" : "treatment");
   const [treatmentId, setTreatmentId] = useState<number | null>(initial?.id ?? null);
-  const [extraIds, setExtraIds] = useState<number[]>([]);
+  const [extraIds, setExtraIds] = useState<number[]>(() =>
+    initial ? (props.initialExtraIds ?? []).filter((id) => initial.extras.some((e) => e.id === id)) : [],
+  );
   const [days, setDays] = useState<Day[] | null>(null);
   const [daysError, setDaysError] = useState<string | null>(null);
   const [month, setMonth] = useState<string | null>(null); // YYYY-MM
@@ -72,9 +69,10 @@ export function BookingFlow(props: {
   const [holdBusy, setHoldBusy] = useState<string | null>(null);
   const [alternatives, setAlternatives] = useState<Slot[]>([]);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const account = props.account ?? null;
+  const [name, setName] = useState(account?.name ?? "");
+  const [email, setEmail] = useState(account?.email ?? "");
+  const [phone, setPhone] = useState(account?.phone ?? "");
   const [notes, setNotes] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [codeSent, setCodeSent] = useState(false);
@@ -252,6 +250,25 @@ export function BookingFlow(props: {
         ? null
         : "Email delivery isn't connected on this site yet, so the code was captured in the admin's development mailbox instead of being sent.",
     );
+  }
+
+  /** Signed in: the account email was verified at sign-in, so continue without a code. */
+  async function continueWithAccount() {
+    if (!hold || !validateDetails()) return;
+    setBusy(true);
+    setError(null);
+    const r = await api<{ verified: boolean; email: string }>("/api/booking/verify", {
+      method: "POST",
+      body: JSON.stringify({ action: "account", holdId: hold.publicId }),
+    });
+    setBusy(false);
+    if (!r.ok) {
+      if (r.body.code === "signed_out") return setError("You've been signed out. Please sign in again, or refresh to book as a guest.");
+      return handleHoldError(r);
+    }
+    setHold({ ...hold, email: r.data.email, verified: true });
+    await refreshQuote(appliedPromo);
+    go("review");
   }
 
   async function checkCode() {
@@ -540,13 +557,19 @@ export function BookingFlow(props: {
                 <Field id="name" label="Full name" error={fieldErrors.name}>
                   <input id="name" className="input" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!fieldErrors.name} aria-describedby={fieldErrors.name ? "name-error" : undefined} />
                 </Field>
-                <Field id="email" label="Email" help="We'll send a 6-digit code to confirm it's you, then your confirmation." error={fieldErrors.email}>
+                <Field
+                  id="email"
+                  label="Email"
+                  help={account ? "You're signed in, so there's no code to enter. Your confirmation goes here." : "We'll send a 6-digit code to confirm it's you, then your confirmation."}
+                  error={fieldErrors.email}
+                >
                   <input
                     id="email"
                     type="email"
                     inputMode="email"
-                    className="input"
+                    className={`input ${account ? "bg-cream/50 text-taupe" : ""}`}
                     autoComplete="email"
+                    readOnly={!!account}
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -566,7 +589,13 @@ export function BookingFlow(props: {
                   <textarea id="notes" rows={3} className="input min-h-24" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} aria-describedby="notes-help" />
                 </Field>
 
-                {!codeSent ? (
+                {account ? (
+                  <div>
+                    <button type="button" className="btn btn-primary" onClick={continueWithAccount} disabled={busy}>
+                      {busy ? "One moment" : "Continue"}
+                    </button>
+                  </div>
+                ) : !codeSent ? (
                   <div>
                     <button type="button" className="btn btn-primary" onClick={sendCode} disabled={busy}>
                       {busy ? "Sending code" : "Send my code"}
@@ -670,17 +699,6 @@ export function BookingFlow(props: {
         quote={step === "review" ? quote : null}
         when={hold ? `${dayLabel(new Date(hold.startsAt).toLocaleDateString("en-CA", { timeZone: timezone }))}, ${fmtTime.format(new Date(hold.startsAt))}` : null}
       />
-    </div>
-  );
-}
-
-function Field({ id, label, help, error, children }: { id: string; label: string; help?: string; error?: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-2">
-      <label htmlFor={id} className="field-label">{label}</label>
-      {children}
-      {help && <p id={`${id}-help`} className="field-help">{help}</p>}
-      {error && <p id={`${id}-error`} className="field-error">{error}</p>}
     </div>
   );
 }

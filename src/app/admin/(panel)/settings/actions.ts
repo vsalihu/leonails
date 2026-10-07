@@ -8,6 +8,7 @@ import { sql } from "@/lib/server/db";
 import { audit } from "@/lib/server/audit";
 import { defaultTechnicianId } from "@/lib/server/schedule";
 import { flagScheduleConflicts } from "@/lib/server/bookings";
+import { RIBBON_ROWS } from "@/lib/ribbon";
 
 function refreshSite() {
   revalidatePath("/", "layout");
@@ -141,4 +142,37 @@ export async function passwordAction(_: ActionState, form: FormData): Promise<Ac
   if (next !== fd.str(form, "confirm")) return fail("The new passwords don't match.", { confirm: "Doesn't match." });
   const r = await changePassword(admin.id, String(form.get("current") ?? ""), next);
   return r.ok ? done("Password changed.") : fail(r.error);
+}
+
+
+const ribbonLink = z
+  .string()
+  .trim()
+  .max(300)
+  .refine((v) => v === "" || (v.startsWith("/") && !v.startsWith("//")) || /^https:\/\/[^\s]+$/.test(v), "Use a page on this site (like /book) or a full https:// link.");
+
+export async function ribbonAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const admin = await requireAdmin();
+  const messages: { text: string; code: string | null; href: string | null }[] = [];
+  const errors: Record<string, string> = {};
+  for (let i = 0; i < RIBBON_ROWS; i++) {
+    const text = fd.str(form, `text${i}`);
+    const code = fd.str(form, `code${i}`).toUpperCase().replace(/\s+/g, "");
+    const href = ribbonLink.safeParse(fd.str(form, `href${i}`));
+    if (!text) {
+      if (code || fd.str(form, `href${i}`)) errors[`text${i}`] = "Add the message text, or clear this row.";
+      continue;
+    }
+    if (text.length > 110) errors[`text${i}`] = "Keep it under 110 characters so it fits on a phone.";
+    if (code.length > 24 || !/^[A-Z0-9-]*$/.test(code)) errors[`code${i}`] = "Letters, numbers and dashes only, up to 24.";
+    if (!href.success) errors[`href${i}`] = href.error.issues[0].message;
+    messages.push({ text, code: code || null, href: href.success && href.data ? href.data : null });
+  }
+  const enabled = fd.bool(form, "enabled");
+  if (Object.keys(errors).length) return fail("Please check the highlighted messages.", errors);
+  if (enabled && messages.length === 0) return fail("Add at least one message, or switch the ribbon off.", { text0: "Add a message." });
+  await sql()`UPDATE announcement_ribbon SET is_enabled = ${enabled}, messages = ${sql().json(messages)}, updated_at = now() WHERE id = 1`;
+  await audit(sql(), { type: "admin", id: admin.id }, "settings.ribbon_updated", "settings", 1, { details: { enabled, count: messages.length } });
+  refreshSite();
+  return done(enabled ? "Saved. The ribbon is live." : "Saved. The ribbon is hidden.");
 }

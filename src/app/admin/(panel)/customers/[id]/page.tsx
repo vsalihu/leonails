@@ -60,6 +60,13 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
           <Panel title="Contact">
             <p className="text-sm"><a className="underline break-all" href={`mailto:${c.email}`}>{c.email}</a></p>
             <p className="mt-1 text-xs text-taupe">{c.email_verified_at ? `Email verified ${z(c.email_verified_at)}` : "Email not verified (admin-created)"}</p>
+            <p className="mt-1 text-xs text-taupe">{c.account_created_at ? `Has an account (since ${z(c.account_created_at)})` : "No account (books as a guest)"}</p>
+            {c.date_of_birth && (
+              <p className="mt-3 text-sm">
+                Born {DateTime.fromJSDate(c.date_of_birth, { zone: "utc" }).toFormat("d LLLL yyyy")}{" "}
+                <span className="text-taupe">(age {Math.floor(-DateTime.fromJSDate(c.date_of_birth, { zone: "utc" }).diffNow("years").years)})</span>
+              </p>
+            )}
             <ActionForm action={contactAction} className="mt-4 grid gap-4">
               <input type="hidden" name="id" value={id} />
               <AField name="name" label="Name"><input name="name" defaultValue={c.name} className="input" /></AField>

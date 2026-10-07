@@ -92,7 +92,7 @@ These are business decisions and content, not code:
 - [ ] Confirm each client in the gallery photos is happy for their hands to be published
 - [ ] Delete the three example reviews (Admin > Reviews)
 - [ ] Website copy for the homepage, About and Treatments (Admin > Settings > Website copy)
-- [ ] Confirm payment methods, cancellation rules, booking terms and privacy notice with Rugile, then publish them (Admin > Settings > Policies)
+- [ ] Confirm payment methods, cancellation rules, booking terms and privacy notice with Rugile, then publish them (Admin > Settings > Policies). The privacy notice should cover client accounts: the date of birth they give, why it is kept, and how to ask for an account to be deleted
 - [ ] Review or disable the WELCOME20 example offer (Admin > Promotions)
 - [ ] Booking rules: notice, horizon, buffer, cutoff, reminder timing (Admin > Settings > Booking rules)
 - [ ] Remove test bookings: `npm run bookings:purge-test -- --domain <test-domain> --confirm`

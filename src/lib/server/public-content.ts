@@ -122,3 +122,13 @@ export async function openingHours(): Promise<{ day: string; hours: string | nul
   const byDay = new Map(rows.map((r) => [r.weekday as number, `${r.s.slice(0, 5)} to ${r.e.slice(0, 5)}`]));
   return [1, 2, 3, 4, 5, 6, 7].map((d) => ({ day: DAY_NAMES[d], hours: byDay.get(d) ?? null }));
 }
+
+export type RibbonMessage = { text: string; code: string | null; href: string | null };
+
+/** The announcement ribbon's messages, or null when it is switched off or empty. */
+export async function announcementRibbon(): Promise<RibbonMessage[] | null> {
+  const [r] = await sql()`SELECT is_enabled, messages FROM announcement_ribbon WHERE id = 1`;
+  if (!r?.is_enabled) return null;
+  const messages = (r.messages as RibbonMessage[]).filter((m) => m.text?.trim());
+  return messages.length ? messages : null;
+}

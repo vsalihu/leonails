@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { requestVerification, verifyCode, BookingError } from "@/lib/server/holds";
+import { requestVerification, verifyCode, verifyWithAccount, BookingError } from "@/lib/server/holds";
+import { currentCustomer } from "@/lib/server/customer-auth";
 import { assertSameOrigin, checkoutSession, errorJson, handleError, json, parseJson } from "@/lib/server/http";
 import { clientIpHash, rateLimit } from "@/lib/server/rate-limit";
 import { kickWorker } from "@/lib/server/notifications/worker";
@@ -9,6 +10,8 @@ import { hmacHex } from "@/lib/server/crypto";
 const body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("send"), holdId: z.string().uuid(), email: z.string().trim().toLowerCase().email("Please enter a valid email address.").max(254) }),
   z.object({ action: z.literal("check"), holdId: z.string().uuid(), code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from the email.") }),
+  // Signed-in clients: their account email was verified at sign-in, so no code is needed.
+  z.object({ action: z.literal("account"), holdId: z.string().uuid() }),
 ]);
 
 /** POST /api/booking/verify: {action:"send", email} sends a code; {action:"check", code} verifies it. */
@@ -26,6 +29,12 @@ export async function POST(req: Request) {
       const r = await requestVerification(data.holdId, session, data.email);
       kickWorker();
       return json({ sent: true, expiresAt: r.expiresAt, delivery: mailMode() === "smtp" ? "email" : "development-mailbox" });
+    }
+    if (data.action === "account") {
+      const me = await currentCustomer();
+      if (!me) return errorJson("Please sign in again.", 401, { code: "signed_out" });
+      await verifyWithAccount(data.holdId, session, me.email);
+      return json({ verified: true, email: me.email });
     }
     if (!(await rateLimit(`verify-check:${ip}`, 30, 3600))) throw new BookingError("Too many attempts. Please wait a while and try again.", "rate_limited");
     const verified = await verifyCode(data.holdId, session, data.code);

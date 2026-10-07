@@ -3,6 +3,7 @@ import type { Db } from "../db";
 
 export type JobKind =
   | "verify_email"
+  | "customer_login_code"
   | "booking_confirmation"
   | "booking_reminder"
   | "booking_cancelled"

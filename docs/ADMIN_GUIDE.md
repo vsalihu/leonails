@@ -50,6 +50,8 @@ Search by name, email or phone. Each profile shows their appointments, offers us
 
 If two profiles share a phone number, it's pointed out but they're never merged automatically.
 
+**Client accounts.** Clients can create an account from *Sign in* on the website (no password: they get a 6-digit code by email). They give their name, mobile number and date of birth once. After that their details are filled in when they book, they skip the email code, and their account page shows their upcoming and past appointments with a *Book this again* button. A customer's page here shows whether they have an account, and their date of birth and age. Clients who book as guests are unaffected, and their earlier guest bookings appear in their account if they later sign in with the same email.
+
 ## Treatments
 
 Tap a treatment to edit its name, price, length, description and compatible extras. Use the arrows to reorder. **Hidden** removes it from booking; **Archived** removes it from lists too. Existing bookings always keep the price and length they were booked with. If you change a length, any upcoming bookings for that treatment are flagged for you to check.
@@ -106,6 +108,8 @@ Reviews clients send through their invitation link wait here until you **approve
 | Policies | Cancellation, booking terms, privacy. Saving creates a new version; each booking remembers which version the client agreed to |
 | System | Whether email, image storage and background sending are working |
 | Activity log | Who changed what, and when |
+
+**Ribbon.** Settings > Ribbon controls the slim dark ribbon above the menu on every page. Write up to five short messages (under 110 characters so they fit on a phone); with more than one they take turns every few seconds. Add an *offer code* and it appears as a tag visitors can copy with one tap, and a *link* (like `/book`) to make the message clickable. Tick *Show the ribbon on the website* and save; untick it to hide the ribbon without losing the messages. Visitors can pause it or close it for the rest of their visit.
 
 ## Things that are marked "Example"
 

@@ -190,6 +190,16 @@ export async function verifyCode(publicId: string, sessionId: string, code: stri
   });
 }
 
+/** Marks a hold verified for a signed-in client (their email was verified when they signed in). */
+export async function verifyWithAccount(publicId: string, sessionId: string, accountEmail: string) {
+  const [h] = await sql()`
+    UPDATE slot_holds SET email = ${normaliseEmail(accountEmail)}, email_verified_at = now()
+    WHERE public_id = ${publicId} AND session_id = ${sessionId}
+      AND released_at IS NULL AND converted_booking_id IS NULL AND expires_at > now()
+    RETURNING id`;
+  if (!h) throw new BookingError("Your reserved time has expired. Please choose a time again.", "hold_expired");
+}
+
 /** Removes calendar blocks of expired holds. Availability already ignores them; this is housekeeping. */
 export async function cleanupExpiredHolds() {
   await sql()`DELETE FROM calendar_blocks WHERE kind = 'hold' AND expires_at < now() - interval '1 minute'`;

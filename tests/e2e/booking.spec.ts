@@ -27,7 +27,7 @@ test("a guest books, verifies their email, sees the private address and can canc
   await expect(page.getByText(/sent a 6-digit code/)).toBeVisible();
 
   const code = await latestCodeFor(email);
-  await page.getByLabel("Code").fill(code);
+  await page.getByLabel("Code", { exact: true }).fill(code);
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Check and confirm" })).toBeVisible();

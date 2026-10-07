@@ -771,3 +771,136 @@ body::after {
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 2.5rem), transparent 100%);
   mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 2.5rem), transparent 100%);
 }
+
+/* Announcement ribbon ----------------------------------------------------------- */
+.ribbon-line {
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+@media (max-width: 639px) {
+  .ribbon-line {
+    font-size: 0.82rem;
+    column-gap: 0.6rem;
+  }
+  .ribbon-code {
+    min-height: 1.5rem;
+    padding: 0 0.6rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+  }
+}
+.ribbon-text {
+  font-family: var(--font-display);
+  font-style: italic;
+  letter-spacing: 0.005em;
+}
+.ribbon-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;
+}
+.ribbon-word > span {
+  display: inline-block;
+}
+.ribbon-line[data-state="in"] .ribbon-word > span {
+  animation: ribbon-word-in 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--w, 0) * 45ms);
+}
+.ribbon-line[data-state="out"] {
+  pointer-events: none;
+}
+.ribbon-line[data-state="out"] .ribbon-word > span,
+.ribbon-line[data-state="out"] .ribbon-code {
+  animation: ribbon-word-out 520ms cubic-bezier(0.64, 0, 0.78, 0) both;
+  animation-delay: calc(var(--w, 0) * 25ms);
+}
+.ribbon-line[data-state="in"] .ribbon-code {
+  animation: ribbon-code-in 700ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+}
+@keyframes ribbon-word-in {
+  from { transform: translateY(110%); }
+  to { transform: none; }
+}
+@keyframes ribbon-word-out {
+  from { transform: none; opacity: 1; }
+  to { transform: translateY(-110%); opacity: 0; }
+}
+@keyframes ribbon-code-in {
+  from { opacity: 0; transform: translateX(-0.5rem); }
+  to { opacity: 1; transform: none; }
+}
+.ribbon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 300ms var(--ease-out-soft);
+}
+.ribbon-link:hover,
+.ribbon-link:focus-visible {
+  color: var(--color-champagne-light);
+}
+.ribbon-arrow {
+  transition: transform 300ms var(--ease-out-soft);
+}
+.ribbon-link:hover .ribbon-arrow {
+  transform: translateX(3px);
+}
+/* Offer code: a perforated tag with punched notches, like a boutique swing ticket. */
+.ribbon-code {
+  position: relative;
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  padding: 0 0.9rem;
+  border: 1px dashed rgb(214 189 143 / 0.75);
+  color: var(--color-champagne-light);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  transition:
+    background-color 250ms var(--ease-out-soft),
+    color 250ms var(--ease-out-soft);
+}
+.ribbon-code::before,
+.ribbon-code::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-night);
+  border: 1px dashed rgb(214 189 143 / 0.75);
+  transform: translateY(-50%);
+}
+.ribbon-code::before {
+  left: -0.3rem;
+  clip-path: inset(0 0 0 50%);
+}
+.ribbon-code::after {
+  right: -0.3rem;
+  clip-path: inset(0 50% 0 0);
+}
+.ribbon-code:hover {
+  background: rgb(214 189 143 / 0.12);
+}
+.ribbon-code-label {
+  margin-right: -0.26em; /* optical: trailing letter-spacing */
+}
+.ribbon-progress {
+  transform: scaleX(0);
+  animation: ribbon-progress var(--dwell, 6500ms) linear both;
+}
+@keyframes ribbon-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* keep time without visible motion: the hairline is the rotation clock */
+  .ribbon-progress {
+    opacity: 0;
+    animation-duration: var(--dwell, 6500ms) !important;
+  }
+}
